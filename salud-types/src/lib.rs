@@ -7,19 +7,23 @@
 //!
 //! All types include serde serialization support and builder patterns.
 
-pub mod datatypes;
-pub mod patient;
-pub mod encounter;
 pub mod clinical_impression;
+pub mod datatypes;
+pub mod encounter;
+pub mod patient;
 
 // Re-export main types for convenience
-pub use patient::{Patient, PatientBuilder, AdministrativeGender};
-pub use encounter::{Encounter, EncounterBuilder, EncounterStatus, EncounterClass, EncounterParticipant};
-pub use clinical_impression::{ClinicalImpression, ClinicalImpressionBuilder, ClinicalImpressionStatus, ClinicalImpressionFinding};
+pub use clinical_impression::{
+    ClinicalImpression, ClinicalImpressionBuilder, ClinicalImpressionFinding,
+    ClinicalImpressionStatus,
+};
+pub use encounter::{
+    Encounter, EncounterBuilder, EncounterClass, EncounterParticipant, EncounterStatus,
+};
+pub use patient::{AdministrativeGender, Patient, PatientBuilder};
 
 // Re-export common datatypes
 pub use datatypes::{
-    Identifier, HumanName, ContactPoint, ContactPointSystem, ContactPointUse,
-    Address, CodeableConcept, Coding, Period, Reference, Annotation,
-    FhirDate, FhirDateTime,
+    Address, Annotation, CodeableConcept, Coding, ContactPoint, ContactPointSystem,
+    ContactPointUse, FhirDate, FhirDateTime, HumanName, Identifier, Period, Reference,
 };

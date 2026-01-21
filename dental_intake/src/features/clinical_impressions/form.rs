@@ -17,7 +17,7 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
         let encounter_id = props.encounter_id.clone();
         Callback::from(move |_| {
             navigator.push(&crate::router::Route::EncounterDetail {
-                id: encounter_id.clone()
+                id: encounter_id.clone(),
             });
         })
     };

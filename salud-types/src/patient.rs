@@ -103,14 +103,18 @@ impl Patient {
 
     /// Get primary phone number
     pub fn primary_phone(&self) -> Option<String> {
-        self.telecom.as_ref()?.iter()
+        self.telecom
+            .as_ref()?
+            .iter()
             .find(|cp| matches!(cp.system, ContactPointSystem::Phone))
             .map(|cp| cp.value.clone())
     }
 
     /// Get primary email
     pub fn primary_email(&self) -> Option<String> {
-        self.telecom.as_ref()?.iter()
+        self.telecom
+            .as_ref()?
+            .iter()
             .find(|cp| matches!(cp.system, ContactPointSystem::Email))
             .map(|cp| cp.value.clone())
     }

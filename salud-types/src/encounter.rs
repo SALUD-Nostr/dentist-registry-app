@@ -157,7 +157,8 @@ impl Encounter {
 
     /// Get the primary practitioner
     pub fn primary_practitioner(&self) -> Option<&Reference> {
-        self.participant.as_ref()?
+        self.participant
+            .as_ref()?
             .first()
             .and_then(|p| p.individual.as_ref())
     }

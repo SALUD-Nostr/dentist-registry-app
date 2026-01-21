@@ -1,11 +1,11 @@
 //! Encounter management features
 
-mod schedule;
-mod form;
 mod detail;
+mod form;
 mod history;
+mod schedule;
 
-pub use schedule::EncountersSchedule;
-pub use form::EncounterForm;
 pub use detail::EncounterDetail;
+pub use form::EncounterForm;
 pub use history::EncountersHistory;
+pub use schedule::EncountersSchedule;

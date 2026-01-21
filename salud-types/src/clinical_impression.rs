@@ -79,7 +79,10 @@ pub enum ClinicalImpressionStatus {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ClinicalImpressionFinding {
     /// What was found (text or coded)
-    #[serde(skip_serializing_if = "Option::is_none", rename = "itemCodeableConcept")]
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        rename = "itemCodeableConcept"
+    )]
     pub item_codeable_concept: Option<CodeableConcept>,
 
     /// Which investigations support finding

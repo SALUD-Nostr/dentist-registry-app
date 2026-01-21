@@ -24,7 +24,7 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
         let encounter_id = props.encounter_id.clone();
         Callback::from(move |_| {
             navigator.push(&crate::router::Route::ClinicalImpressionNew {
-                encounter_id: encounter_id.clone()
+                encounter_id: encounter_id.clone(),
             });
         })
     };
