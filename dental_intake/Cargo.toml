@@ -1,0 +1,37 @@
+[package]
+name = "dental_intake"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+production = []
+
+[dependencies]
+# Core dependencies
+salud-types = { path = "../salud-types" }
+yew = { version = "0.21", features = ["csr"] }
+yew-router = "0.18.0"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde-wasm-bindgen = "0.6.5"
+
+# Date/Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Storage
+idb = "0.6.4"
+
+# Web APIs
+web-sys = { version = "0.3.77", features = ["CssStyleDeclaration", "HtmlElement", "Window", "Document"] }
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+
+# Error handling
+thiserror = "2.0"
+
+# Utils
+uuid = { version = "1.0", features = ["v4", "serde", "js"] }
+gloo-console = "0.3"
+shady-minions = "0.1.5"

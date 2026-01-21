@@ -1,0 +1,7 @@
+[workspace]
+resolver = "3"
+members = ["salud-types", "dental_intake"]
+exclude = ["shady-minions"]
+
+
+

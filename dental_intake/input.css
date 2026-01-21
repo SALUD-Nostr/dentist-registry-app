@@ -1,0 +1,165 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
+@import "tailwindcss";
+@source "./src/**";
+@source "../shady-minions/src/**";
+@source "../paravida-components/src/**";
+@source "../../../illuminodes/minions/src/**";
+
+:root {
+    --background: hsl(0, 0%, 100%);
+    --foreground: hsl(0, 0%, 0%);
+    --primary: hsl(242, 44.1%, 55.1%);
+    --secondary: hsl(202.68, 84.54%, 61.96%);
+    --destructive: hsl(0, 100%, 50%);
+    --muted: hsl(0, 0%, 36.86%);
+    --muted-foreground: hsl(0, 0%, 0%);
+    --accent: hsl(180.8, 68.81%, 42.75%);
+    --accent-foreground: hsl(0, 0.0%, 100.0%);
+    --border: hsl(0, 0%, 36.86%);
+    --input: hsl(242, 44.1%, 55.1%);
+    --ring: hsl(202.68, 84.54%, 61.96%);
+
+    --room-general: hsl(207.79, 87.16%, 78.63%);
+    --room-ultra: hsl(257.37, 33.04%, 54.9%);
+    --room-mental: hsl(0, 0%, 61.18%);
+    --room-surgical: hsl(0, 0%, 61.18%);
+    --room-general-4: hsl(138.26, 21.3%, 42.35%);
+}
+
+.dark {
+
+    --background: hsl(0, 0%, 100%);
+    --foreground: hsl(0, 0%, 0%);
+    --primary: hsl(242, 44.1%, 55.1%);
+    --secondary: hsl(202.68, 84.54%, 61.96%);
+    --destructive: hsl(0, 100%, 50%);
+    --muted: hsl(0, 0%, 36.86%);
+    --muted-foreground: hsl(0, 0%, 0%);
+    --accent: hsl(180.8, 68.81%, 42.75%);
+    --accent-foreground: hsl(0, 0.0%, 100.0%);
+    --border: hsl(0, 0%, 36.86%);
+    --input: hsl(242, 44.1%, 55.1%);
+    --ring: hsl(202.68, 84.54%, 61.96%);
+
+    --room-general: hsl(207.79, 87.16%, 78.63%);
+    --room-ultra: hsl(257.37, 33.04%, 54.9%);
+    --room-mental: hsl(0, 0%, 61.18%);
+    --room-surgical: hsl(0, 0%, 61.18%);
+    --room-general-4: hsl(138.26, 21.3%, 42.35%);
+}
+
+@layer utilities {
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      .no-scrollbar::-webkit-scrollbar {
+          display: none;
+      }
+     /* Hide scrollbar for IE, Edge and Firefox */
+      .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+    }
+}
+
+@theme {
+  --font-roboto: "Roboto", sans-serif;
+}
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--background);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--background);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--background);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-room-general: var(--room-general);
+    --color-room-ultra: var(--room-ultra);
+    --color-room-mental: var(--room-mental);
+    --color-room-surgical: var(--room-surgical);
+    --color-room-general-4: var(--room-general-4);
+}
+
+
+.fc-col-header-cell {
+    font-size: 0.8rem !important;
+}
+
+/* Fix the day cell so it never grows */
+.fc-daygrid-day-frame {
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: 5rem !important; /* your desired height */
+    overflow: hidden !important;
+}
+
+/* Let the event list take leftover space and scroll */
+.fc-daygrid-day-events {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    min-height: 0 !important; /* CRUCIAL */
+}
+
+/* Optional: hide scrollbars prettier */
+.fc-daygrid-day-events::-webkit-scrollbar {
+    width: 4px;
+}
+
+/* Base override (affects all screens, subtle) */
+.fc-header-toolbar .fc-toolbar-title {
+    font-weight: 600;          /* Keep it readable */
+    line-height: 1.1;
+}
+
+/* Medium screens */
+@media (max-width: 900px) {
+    .fc-header-toolbar .fc-toolbar-title {
+        font-size: 1.25rem;    /* ~20px */
+    }
+
+    .fc-header-toolbar .fc-button {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* Phones */
+@media (max-width: 600px) {
+    .fc-header-toolbar {
+        gap: 0.25rem;
+    }
+
+    .fc-header-toolbar .fc-toolbar-title {
+        font-size: 0.9rem;     /* ~14px */
+    }
+
+    /* Reduce button clutter */
+    .fc-header-toolbar .fc-button {
+        padding: 0.2rem 0.35rem;
+        font-size: 0.7rem;
+    }
+
+    .fc-header-toolbar .fc-button .fc-icon {
+        font-size: 0.8rem;
+    }
+}
+
+/* Very small phones */
+@media (max-width: 400px) {
+    .fc-header-toolbar .fc-toolbar-title {
+        font-size: 0.75rem;    /* ~12px */
+    }
+
+    .fc-header-toolbar .fc-button {
+        padding: 0.15rem 0.25rem;
+        font-size: 0.6rem;
+    }
+}
