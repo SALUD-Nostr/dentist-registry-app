@@ -116,11 +116,73 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
     };
 
     let handle_new_impression = {
-        let navigator = navigator;
+        let navigator = navigator.clone();
         let encounter_id = props.encounter_id.clone();
         Callback::from(move |_| {
             navigator.push(&crate::router::Route::ClinicalImpressionNew {
                 encounter_id: encounter_id.clone(),
+            });
+        })
+    };
+
+    let handle_mark_completed = {
+        let encounter = encounter.clone();
+        let encounter_store = encounter_store.clone();
+        let encounter_id = props.encounter_id.clone();
+
+        Callback::from(move |_| {
+            let encounter = encounter.clone();
+            let encounter_store = encounter_store.clone();
+            let encounter_id = encounter_id.clone();
+
+            spawn_local(async move {
+                if let Some(mut enc) = (*encounter).as_ref().cloned() {
+                    enc.status = EncounterStatus::Finished;
+
+                    match encounter_store.save(&enc).await {
+                        Ok(_) => {
+                            log!("Encounter marked as completed");
+                            // Reload the encounter
+                            if let Ok(Some(updated_enc)) = encounter_store.get(&encounter_id).await {
+                                encounter.set(Some(updated_enc));
+                            }
+                        }
+                        Err(e) => {
+                            log!("Error updating encounter:", format!("{:?}", e));
+                        }
+                    }
+                }
+            });
+        })
+    };
+
+    let handle_mark_cancelled = {
+        let encounter = encounter.clone();
+        let encounter_store = encounter_store.clone();
+        let encounter_id = props.encounter_id.clone();
+
+        Callback::from(move |_| {
+            let encounter = encounter.clone();
+            let encounter_store = encounter_store.clone();
+            let encounter_id = encounter_id.clone();
+
+            spawn_local(async move {
+                if let Some(mut enc) = (*encounter).as_ref().cloned() {
+                    enc.status = EncounterStatus::Cancelled;
+
+                    match encounter_store.save(&enc).await {
+                        Ok(_) => {
+                            log!("Encounter marked as cancelled");
+                            // Reload the encounter
+                            if let Ok(Some(updated_enc)) = encounter_store.get(&encounter_id).await {
+                                encounter.set(Some(updated_enc));
+                            }
+                        }
+                        Err(e) => {
+                            log!("Error updating encounter:", format!("{:?}", e));
+                        }
+                    }
+                }
             });
         })
     };
@@ -356,6 +418,32 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                                 }
                             </div>
                         </shady_minions::ui::Card>
+
+                        // Action Buttons
+                        {
+                            if enc.status != EncounterStatus::Finished && enc.status != EncounterStatus::Cancelled {
+                                html! {
+                                    <div class="flex gap-3 justify-end">
+                                        <button
+                                            onclick={handle_mark_cancelled.clone()}
+                                            class="px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2"
+                                        >
+                                            <crate::components::X class="size-5" />
+                                            {"Marcar como Cancelada"}
+                                        </button>
+                                        <button
+                                            onclick={handle_mark_completed.clone()}
+                                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                                        >
+                                            <crate::components::Check class="size-5" />
+                                            {"Marcar como Completada"}
+                                        </button>
+                                    </div>
+                                }
+                            } else {
+                                html! {}
+                            }
+                        }
 
                         // Clinical Impressions Card
                         <shady_minions::ui::Card>
