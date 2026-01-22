@@ -2,7 +2,7 @@
 
 use yew::prelude::*;
 
-#[derive(Properties, PartialEq)]
+#[derive(Properties, PartialEq, Eq)]
 pub struct IconProps {
     #[prop_or_default]
     pub class: Classes,

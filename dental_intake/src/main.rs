@@ -2,22 +2,7 @@
 #![allow(
     clippy::missing_errors_doc,
     clippy::future_not_send,
-    clippy::redundant_clone,
-    clippy::redundant_closure,
-    clippy::uninlined_format_args,
-    clippy::cast_lossless,
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    clippy::or_fun_call,
-    clippy::option_if_let_else,
-    clippy::type_repetition_in_bounds,
-    clippy::enum_variant_names,
-    clippy::needless_pass_by_value,
-    clippy::trivially_copy_pass_by_ref,
-    clippy::match_same_arms,
-    clippy::unnecessary_wraps,
-    clippy::items_after_statements,
-    clippy::manual_let_else
+    clippy::type_repetition_in_bounds
 )]
 
 use yew::prelude::*;
@@ -33,22 +18,18 @@ pub const PARAVIDA_PUBKEY: &str =
 mod components;
 mod constants;
 mod features;
-// pub(crate) mod local_db; // TODO: Refactor to use salud-types instead of paravida-models
+mod storage;
 mod router;
 // pub(crate) mod shared; // TODO: Re-enable after Nostr integration restored
 
 #[function_component(App)]
 fn app() -> Html {
-    // TODO: Re-enable Nostr integration after initial refactor
-    // let user_relay = vec![nostr_minions::UserRelay {
-    //     url: "wss://relay.illuminodes.com".to_string(),
-    //     read: true,
-    //     write: true,
-    // }];
     html! {
         <yew_router::router::BrowserRouter>
             <yew::suspense::Suspense fallback={html!{<Splash />}}>
-                <router::AppRouter />
+                <storage::StorageProvider>
+                    <router::AppRouter />
+                </storage::StorageProvider>
             </yew::suspense::Suspense>
         </yew_router::router::BrowserRouter>
     }

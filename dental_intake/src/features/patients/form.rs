@@ -8,7 +8,7 @@ pub fn patient_form() -> Html {
     let navigator = use_navigator().unwrap();
 
     let handle_cancel = {
-        let navigator = navigator.clone();
+        let navigator = navigator;
         Callback::from(move |_| {
             navigator.push(&crate::router::Route::PatientsList);
         })

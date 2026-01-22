@@ -20,7 +20,7 @@ pub fn home() -> Html {
     };
 
     let navigate_to_new_encounter = {
-        let navigator = navigator.clone();
+        let navigator = navigator;
         Callback::from(move |_| {
             navigator.push(&crate::router::Route::EncounterNew);
         })

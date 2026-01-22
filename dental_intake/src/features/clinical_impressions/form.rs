@@ -3,7 +3,7 @@
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-#[derive(Properties, PartialEq)]
+#[derive(Properties, PartialEq, Eq)]
 pub struct ClinicalImpressionFormProps {
     pub encounter_id: String,
 }
@@ -13,7 +13,7 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
     let navigator = use_navigator().unwrap();
 
     let handle_cancel = {
-        let navigator = navigator.clone();
+        let navigator = navigator;
         let encounter_id = props.encounter_id.clone();
         Callback::from(move |_| {
             navigator.push(&crate::router::Route::EncounterDetail {

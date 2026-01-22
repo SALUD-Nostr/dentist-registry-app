@@ -3,7 +3,7 @@
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-#[derive(Properties, PartialEq)]
+#[derive(Properties, PartialEq, Eq)]
 pub struct PatientDetailProps {
     pub patient_id: String,
 }
@@ -13,7 +13,7 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
     let navigator = use_navigator().unwrap();
 
     let handle_back = {
-        let navigator = navigator.clone();
+        let navigator = navigator;
         Callback::from(move |_| {
             navigator.push(&crate::router::Route::PatientsList);
         })

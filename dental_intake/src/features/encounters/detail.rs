@@ -3,7 +3,7 @@
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-#[derive(Properties, PartialEq)]
+#[derive(Properties, PartialEq, Eq)]
 pub struct EncounterDetailProps {
     pub encounter_id: String,
 }
@@ -20,7 +20,7 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
     };
 
     let handle_new_impression = {
-        let navigator = navigator.clone();
+        let navigator = navigator;
         let encounter_id = props.encounter_id.clone();
         Callback::from(move |_| {
             navigator.push(&crate::router::Route::ClinicalImpressionNew {

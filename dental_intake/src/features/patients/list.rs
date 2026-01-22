@@ -6,7 +6,7 @@ use yew_router::prelude::*;
 #[function_component(PatientsList)]
 pub fn patients_list() -> Html {
     let navigator = use_navigator().unwrap();
-    let search_query = use_state(|| String::new());
+    let search_query = use_state(String::new);
 
     let on_search_input = {
         let search_query = search_query.clone();
@@ -17,7 +17,7 @@ pub fn patients_list() -> Html {
     };
 
     let handle_new_patient = {
-        let navigator = navigator.clone();
+        let navigator = navigator;
         Callback::from(move |_| {
             navigator.push(&crate::router::Route::PatientNew);
         })

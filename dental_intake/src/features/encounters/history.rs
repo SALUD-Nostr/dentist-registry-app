@@ -4,7 +4,7 @@ use yew::prelude::*;
 
 #[function_component(EncountersHistory)]
 pub fn encounters_history() -> Html {
-    let search_query = use_state(|| String::new());
+    let search_query = use_state(String::new);
 
     let on_search_input = {
         let search_query = search_query.clone();

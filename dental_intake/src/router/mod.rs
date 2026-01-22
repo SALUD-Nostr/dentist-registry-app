@@ -1,7 +1,6 @@
 mod hooks;
 mod navbar;
 
-pub use hooks::use_is_route_active;
 
 use yew::prelude::*;
 use yew_router::prelude::*;
