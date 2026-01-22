@@ -1,7 +1,7 @@
 //! Patient storage using IndexedDB
 
 use gloo_console::log;
-use idb::{Database, Factory, ObjectStore, TransactionMode};
+use idb::{Database, DatabaseEvent, Factory, IndexParams, KeyPath, ObjectStoreParams, TransactionMode};
 use salud_types::Patient;
 use serde_wasm_bindgen::{from_value, to_value};
 use std::rc::Rc;
@@ -9,6 +9,7 @@ use wasm_bindgen::JsValue;
 use yew::prelude::*;
 
 use super::{stores, DB_NAME, DB_VERSION};
+use crate::error::AppError;
 
 #[derive(Clone)]
 pub struct PatientStore {
@@ -17,95 +18,126 @@ pub struct PatientStore {
 
 impl PatientStore {
     /// Open or create the database
-    pub async fn new() -> Result<Self, String> {
-        let factory = Factory::new().map_err(|e| format!("{:?}", e))?;
+    pub async fn new() -> Result<Self, AppError> {
+        let factory = Factory::new()?;
 
-        let db = factory
-            .open(DB_NAME, Some(DB_VERSION), |evt| {
-                let db = evt.database();
+        let mut open_request = factory.open(DB_NAME, Some(DB_VERSION))?;
 
-                // Create patients object store if it doesn't exist
-                if !db.object_store_names().contains(stores::PATIENTS) {
-                    let store = db.create_object_store(stores::PATIENTS).map_err(|e| format!("{:?}", e))?;
-                    // Create index on patient id
-                    store.create_index("by_id", "id", true).map_err(|e| format!("{:?}", e))?;
+        open_request.on_upgrade_needed(|event| {
+            let database = match idb::DatabaseEvent::database(&event) {
+                Ok(db) => db,
+                Err(e) => {
+                    gloo_console::error!("Error getting database:", format!("{:?}", e));
+                    return;
                 }
+            };
 
-                // Create encounters object store
-                if !db.object_store_names().contains(stores::ENCOUNTERS) {
-                    let store = db.create_object_store(stores::ENCOUNTERS).map_err(|e| format!("{:?}", e))?;
-                    store.create_index("by_id", "id", true).map_err(|e| format!("{:?}", e))?;
-                    store.create_index("by_patient", "subject.reference", false).map_err(|e| format!("{:?}", e))?;
+            // Create patients object store if it doesn't exist
+            if !database.store_names().iter().any(|name| name == stores::PATIENTS) {
+                if let Ok(store) = database.create_object_store(stores::PATIENTS, idb::ObjectStoreParams::new()) {
+                    let mut params = idb::IndexParams::new();
+                    params.unique(true);
+                    if let Err(e) = store.create_index("by_id", idb::KeyPath::new_single("id"), Some(params)) {
+                        gloo_console::error!("Error creating index:", format!("{:?}", e));
+                    }
                 }
+            }
 
-                // Create clinical impressions object store
-                if !db.object_store_names().contains(stores::CLINICAL_IMPRESSIONS) {
-                    let store = db.create_object_store(stores::CLINICAL_IMPRESSIONS).map_err(|e| format!("{:?}", e))?;
-                    store.create_index("by_id", "id", true).map_err(|e| format!("{:?}", e))?;
-                    store.create_index("by_encounter", "encounter.reference", false).map_err(|e| format!("{:?}", e))?;
+            // Create encounters object store
+            if !database.store_names().iter().any(|name| name == stores::ENCOUNTERS) {
+                if let Ok(store) = database.create_object_store(stores::ENCOUNTERS, idb::ObjectStoreParams::new()) {
+                    let mut id_params = idb::IndexParams::new();
+                    id_params.unique(true);
+                    if let Err(e) = store.create_index("by_id", idb::KeyPath::new_single("id"), Some(id_params)) {
+                        gloo_console::error!("Error creating index:", format!("{:?}", e));
+                    }
+
+                    let mut patient_params = idb::IndexParams::new();
+                    patient_params.unique(false);
+                    if let Err(e) = store.create_index("by_patient", idb::KeyPath::new_single("subject.reference"), Some(patient_params)) {
+                        gloo_console::error!("Error creating index:", format!("{:?}", e));
+                    }
                 }
+            }
 
-                Ok(())
-            })
-            .await.map_err(|e| format!("{:?}", e))?;
+            // Create clinical impressions object store
+            if !database.store_names().iter().any(|name| name == stores::CLINICAL_IMPRESSIONS) {
+                if let Ok(store) = database.create_object_store(stores::CLINICAL_IMPRESSIONS, idb::ObjectStoreParams::new()) {
+                    let mut id_params = idb::IndexParams::new();
+                    id_params.unique(true);
+                    if let Err(e) = store.create_index("by_id", idb::KeyPath::new_single("id"), Some(id_params)) {
+                        gloo_console::error!("Error creating index:", format!("{:?}", e));
+                    }
+
+                    let mut encounter_params = idb::IndexParams::new();
+                    encounter_params.unique(false);
+                    if let Err(e) = store.create_index("by_encounter", idb::KeyPath::new_single("encounter.reference"), Some(encounter_params)) {
+                        gloo_console::error!("Error creating index:", format!("{:?}", e));
+                    }
+                }
+            }
+        });
+
+        let db = open_request.await?;
 
         Ok(Self { db: Rc::new(db) })
     }
 
     /// Save a patient to the database
-    pub async fn save(&self, patient: &Patient) -> Result<(), String> {
+    pub async fn save(&self, patient: &Patient) -> Result<(), AppError> {
         let tx = self
             .db
-            .transaction(&[stores::PATIENTS], TransactionMode::ReadWrite).map_err(|e| format!("{:?}", e))?;
+            .transaction(&[stores::PATIENTS], TransactionMode::ReadWrite)?;
 
-        let store = tx.object_store(stores::PATIENTS).map_err(|e| format!("{:?}", e))?;
+        let store = tx.object_store(stores::PATIENTS)?;
 
-        let patient_value = to_value(patient).map_err(|e| format!("{:?}", e))?;
+        let patient_value = to_value(patient)?;
 
         // Use patient id as key if available, otherwise use auto-increment
         if let Some(id) = &patient.id {
-            store.put(&patient_value, Some(&JsValue::from_str(id))).map_err(|e| format!("{:?}", e))?;
+            store.put(&patient_value, Some(&JsValue::from_str(id)))?;
         } else {
-            store.add(&patient_value, None).map_err(|e| format!("{:?}", e))?;
+            store.add(&patient_value, None)?;
         }
 
-        tx.await.map_err(|e| JsValue::from_str(&format!("{:?}", e))).map_err(|e| format!("{:?}", e))?;
+        tx.await?;
 
         log!("Patient saved successfully");
         Ok(())
     }
 
     /// Get a patient by ID
-    pub async fn get(&self, id: &str) -> Result<Option<Patient>, String> {
+    pub async fn get(&self, id: &str) -> Result<Option<Patient>, AppError> {
         let tx = self
             .db
-            .transaction(&[stores::PATIENTS], TransactionMode::ReadOnly).map_err(|e| format!("{:?}", e))?;
+            .transaction(&[stores::PATIENTS], TransactionMode::ReadOnly)?;
 
-        let store = tx.object_store(stores::PATIENTS).map_err(|e| format!("{:?}", e))?;
+        let store = tx.object_store(stores::PATIENTS)?;
 
-        let value = store.get(JsValue::from_str(id))?.await.map_err(|e| format!("{:?}", e))?;
+        let value = store.get(JsValue::from_str(id))?.await?;
 
-        if value.is_undefined() || value.is_null() {
-            return Ok(None);
+        match value {
+            Some(js_val) if !js_val.is_undefined() && !js_val.is_null() => {
+                let patient: Patient = from_value(js_val)?;
+                Ok(Some(patient))
+            }
+            _ => Ok(None),
         }
-
-        let patient: Patient = from_value(value).map_err(|e| format!("{:?}", e))?;
-        Ok(Some(patient))
     }
 
     /// Get all patients
-    pub async fn get_all(&self) -> Result<Vec<Patient>, String> {
+    pub async fn get_all(&self) -> Result<Vec<Patient>, AppError> {
         let tx = self
             .db
-            .transaction(&[stores::PATIENTS], TransactionMode::ReadOnly).map_err(|e| format!("{:?}", e))?;
+            .transaction(&[stores::PATIENTS], TransactionMode::ReadOnly)?;
 
-        let store = tx.object_store(stores::PATIENTS).map_err(|e| format!("{:?}", e))?;
+        let store = tx.object_store(stores::PATIENTS)?;
 
-        let values = store.get_all(None, None)?.await.map_err(|e| format!("{:?}", e))?;
+        let values = store.get_all(None, None)?.await?;
 
         let mut patients = Vec::new();
         for value in values.iter() {
-            let patient: Patient = from_value(value.clone()).map_err(|e| format!("{:?}", e))?;
+            let patient: Patient = from_value(value.clone())?;
             patients.push(patient);
         }
 
@@ -113,8 +145,8 @@ impl PatientStore {
     }
 
     /// Search patients by name (case-insensitive substring match)
-    pub async fn search(&self, query: &str) -> Result<Vec<Patient>, String> {
-        let all_patients = self.get_all().await.map_err(|e| format!("{:?}", e))?;
+    pub async fn search(&self, query: &str) -> Result<Vec<Patient>, AppError> {
+        let all_patients = self.get_all().await?;
 
         let query_lower = query.to_lowercase();
 
@@ -133,30 +165,30 @@ impl PatientStore {
     }
 
     /// Delete a patient by ID
-    pub async fn delete(&self, id: &str) -> Result<(), String> {
+    pub async fn delete(&self, id: &str) -> Result<(), AppError> {
         let tx = self
             .db
-            .transaction(&[stores::PATIENTS], TransactionMode::ReadWrite).map_err(|e| format!("{:?}", e))?;
+            .transaction(&[stores::PATIENTS], TransactionMode::ReadWrite)?;
 
-        let store = tx.object_store(stores::PATIENTS).map_err(|e| format!("{:?}", e))?;
+        let store = tx.object_store(stores::PATIENTS)?;
 
-        store.delete(JsValue::from_str(id)).map_err(|e| format!("{:?}", e))?;
+        store.delete(JsValue::from_str(id))?;
 
-        tx.await.map_err(|e| JsValue::from_str(&format!("{:?}", e))).map_err(|e| format!("{:?}", e))?;
+        tx.await?;
 
         log!("Patient deleted successfully");
         Ok(())
     }
 
     /// Count total patients
-    pub async fn count(&self) -> Result<u32, String> {
+    pub async fn count(&self) -> Result<u32, AppError> {
         let tx = self
             .db
-            .transaction(&[stores::PATIENTS], TransactionMode::ReadOnly).map_err(|e| format!("{:?}", e))?;
+            .transaction(&[stores::PATIENTS], TransactionMode::ReadOnly)?;
 
-        let store = tx.object_store(stores::PATIENTS).map_err(|e| format!("{:?}", e))?;
+        let store = tx.object_store(stores::PATIENTS)?;
 
-        let count = store.count(None)?.await.map_err(|e| format!("{:?}", e))?;
+        let count = store.count(None)?.await?;
 
         Ok(count as u32)
     }
@@ -194,7 +226,7 @@ pub fn patient_store_provider(props: &PatientStoreProviderProps) -> Html {
                         store.set(Some(Rc::new(db)));
                     }
                     Err(e) => {
-                        gloo_console::error!("Failed to initialize patient store:", e);
+                        gloo_console::error!("Failed to initialize patient store:", format!("{:?}", e));
                     }
                 }
             });

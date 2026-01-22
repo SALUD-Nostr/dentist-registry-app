@@ -17,6 +17,7 @@ pub const PARAVIDA_PUBKEY: &str =
 
 mod components;
 mod constants;
+mod error;
 mod features;
 mod storage;
 mod router;

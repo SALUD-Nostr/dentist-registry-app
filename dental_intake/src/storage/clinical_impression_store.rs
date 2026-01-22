@@ -9,6 +9,7 @@ use wasm_bindgen::JsValue;
 use yew::prelude::*;
 
 use super::stores;
+use crate::error::AppError;
 
 #[derive(Clone)]
 pub struct ClinicalImpressionStore {
@@ -22,61 +23,62 @@ impl ClinicalImpressionStore {
     }
 
     /// Save a clinical impression to the database
-    pub async fn save(&self, impression: &ClinicalImpression) -> Result<(), String> {
+    pub async fn save(&self, impression: &ClinicalImpression) -> Result<(), AppError> {
         let tx = self.db.transaction(
             &[stores::CLINICAL_IMPRESSIONS],
             TransactionMode::ReadWrite,
-        ).map_err(|e| format!("{:?}", e))?;
+        )?;
 
-        let store = tx.object_store(stores::CLINICAL_IMPRESSIONS).map_err(|e| format!("{:?}", e))?;
+        let store = tx.object_store(stores::CLINICAL_IMPRESSIONS)?;
 
-        let impression_value = to_value(impression).map_err(|e| format!("{:?}", e))?;
+        let impression_value = to_value(impression)?;
 
         if let Some(id) = &impression.id {
-            store.put(&impression_value, Some(&JsValue::from_str(id))).map_err(|e| format!("{:?}", e))?;
+            store.put(&impression_value, Some(&JsValue::from_str(id)))?;
         } else {
-            store.add(&impression_value, None).map_err(|e| format!("{:?}", e))?;
+            store.add(&impression_value, None)?;
         }
 
-        tx.await.map_err(|e| JsValue::from_str(&format!("{:?}", e))).map_err(|e| format!("{:?}", e))?;
+        tx.await?;
 
         log!("Clinical impression saved successfully");
         Ok(())
     }
 
     /// Get a clinical impression by ID
-    pub async fn get(&self, id: &str) -> Result<Option<ClinicalImpression>, String> {
+    pub async fn get(&self, id: &str) -> Result<Option<ClinicalImpression>, AppError> {
         let tx = self.db.transaction(
             &[stores::CLINICAL_IMPRESSIONS],
             TransactionMode::ReadOnly,
-        ).map_err(|e| format!("{:?}", e))?;
+        )?;
 
-        let store = tx.object_store(stores::CLINICAL_IMPRESSIONS).map_err(|e| format!("{:?}", e))?;
+        let store = tx.object_store(stores::CLINICAL_IMPRESSIONS)?;
 
-        let value = store.get(JsValue::from_str(id))?.await.map_err(|e| format!("{:?}", e))?;
+        let value = store.get(JsValue::from_str(id))?.await?;
 
-        if value.is_undefined() || value.is_null() {
-            return Ok(None);
+        match value {
+            Some(js_val) if !js_val.is_undefined() && !js_val.is_null() => {
+                let impression: ClinicalImpression = from_value(js_val)?;
+                Ok(Some(impression))
+            }
+            _ => Ok(None),
         }
-
-        let impression: ClinicalImpression = from_value(value).map_err(|e| format!("{:?}", e))?;
-        Ok(Some(impression))
     }
 
     /// Get all clinical impressions
-    pub async fn get_all(&self) -> Result<Vec<ClinicalImpression>, String> {
+    pub async fn get_all(&self) -> Result<Vec<ClinicalImpression>, AppError> {
         let tx = self.db.transaction(
             &[stores::CLINICAL_IMPRESSIONS],
             TransactionMode::ReadOnly,
-        ).map_err(|e| format!("{:?}", e))?;
+        )?;
 
-        let store = tx.object_store(stores::CLINICAL_IMPRESSIONS).map_err(|e| format!("{:?}", e))?;
+        let store = tx.object_store(stores::CLINICAL_IMPRESSIONS)?;
 
-        let values = store.get_all(None, None)?.await.map_err(|e| format!("{:?}", e))?;
+        let values = store.get_all(None, None)?.await?;
 
         let mut impressions = Vec::new();
         for value in values.iter() {
-            let impression: ClinicalImpression = from_value(value.clone()).map_err(|e| format!("{:?}", e))?;
+            let impression: ClinicalImpression = from_value(value.clone())?;
             impressions.push(impression);
         }
 
@@ -84,8 +86,8 @@ impl ClinicalImpressionStore {
     }
 
     /// Get clinical impressions for a specific encounter
-    pub async fn get_by_encounter(&self, encounter_id: &str) -> Result<Vec<ClinicalImpression>, String> {
-        let all_impressions = self.get_all().await.map_err(|e| format!("{:?}", e))?;
+    pub async fn get_by_encounter(&self, encounter_id: &str) -> Result<Vec<ClinicalImpression>, AppError> {
+        let all_impressions = self.get_all().await?;
 
         let encounter_ref = format!("Encounter/{}", encounter_id);
 
@@ -104,17 +106,17 @@ impl ClinicalImpressionStore {
     }
 
     /// Delete a clinical impression by ID
-    pub async fn delete(&self, id: &str) -> Result<(), String> {
+    pub async fn delete(&self, id: &str) -> Result<(), AppError> {
         let tx = self.db.transaction(
             &[stores::CLINICAL_IMPRESSIONS],
             TransactionMode::ReadWrite,
-        ).map_err(|e| format!("{:?}", e))?;
+        )?;
 
-        let store = tx.object_store(stores::CLINICAL_IMPRESSIONS).map_err(|e| format!("{:?}", e))?;
+        let store = tx.object_store(stores::CLINICAL_IMPRESSIONS)?;
 
-        store.delete(JsValue::from_str(id)).map_err(|e| format!("{:?}", e))?;
+        store.delete(JsValue::from_str(id))?;
 
-        tx.await.map_err(|e| JsValue::from_str(&format!("{:?}", e))).map_err(|e| format!("{:?}", e))?;
+        tx.await?;
 
         log!("Clinical impression deleted successfully");
         Ok(())
