@@ -2,7 +2,7 @@
 
 use chrono::Timelike;
 use gloo_console::log;
-use salud_types::{Encounter, EncounterClass, EncounterStatus, Patient};
+use salud_types::{ClinicalImpression, ClinicalImpressionStatus, Encounter, EncounterClass, EncounterStatus, Patient};
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -17,10 +17,13 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
     let navigator = use_navigator().unwrap();
     let encounter_store = crate::storage::use_encounter_store();
     let patient_store = crate::storage::use_patient_store();
+    let clinical_impression_store = crate::storage::use_clinical_impression_store();
 
     let encounter = use_state(|| None::<Encounter>);
     let patient = use_state(|| None::<Patient>);
+    let clinical_impressions = use_state(|| Vec::<ClinicalImpression>::new());
     let is_loading = use_state(|| true);
+    let is_loading_impressions = use_state(|| true);
     let error = use_state(|| None::<String>);
 
     // Load encounter and patient on mount
@@ -71,6 +74,33 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                         log!("Error loading encounter:", format!("{:?}", e));
                         error.set(Some(format!("Error al cargar la cita: {:?}", e)));
                         is_loading.set(false);
+                    }
+                }
+            });
+            || ()
+        });
+    }
+
+    // Load clinical impressions for this encounter
+    {
+        let encounter_id = props.encounter_id.clone();
+        let clinical_impressions = clinical_impressions.clone();
+        let is_loading_impressions = is_loading_impressions.clone();
+        let clinical_impression_store = clinical_impression_store.clone();
+
+        use_effect_with(encounter_id.clone(), move |id| {
+            let id = id.clone();
+            spawn_local(async move {
+                log!("Loading clinical impressions for encounter:", id.as_str());
+                match clinical_impression_store.get_by_encounter(&id).await {
+                    Ok(impressions) => {
+                        log!("Clinical impressions loaded:", format!("{} impressions", impressions.len()));
+                        clinical_impressions.set(impressions);
+                        is_loading_impressions.set(false);
+                    }
+                    Err(e) => {
+                        log!("Error loading clinical impressions:", format!("{:?}", e));
+                        is_loading_impressions.set(false);
                     }
                 }
             });
@@ -339,10 +369,112 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                                     {"Agregar"}
                                 </button>
                             </div>
-                            <div class="text-center py-8">
-                                <crate::components::Clipboard class="size-16 mx-auto mb-4 opacity-50 text-muted" />
-                                <p class="text-muted">{"Lista de impresiones clínicas - Próximamente"}</p>
-                            </div>
+
+                            if *is_loading_impressions {
+                                <div class="text-center py-8">
+                                    <div class="size-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                                    <p class="text-muted mt-4">{"Cargando impresiones clínicas..."}</p>
+                                </div>
+                            } else if (*clinical_impressions).is_empty() {
+                                <div class="text-center py-8">
+                                    <crate::components::Clipboard class="size-16 mx-auto mb-4 opacity-50 text-muted" />
+                                    <p class="text-muted">{"No hay impresiones clínicas registradas"}</p>
+                                    <p class="text-sm text-muted mt-2">{"Haz clic en 'Agregar' para crear la primera impresión"}</p>
+                                </div>
+                            } else {
+                                <div class="space-y-4">
+                                    { for (*clinical_impressions).iter().map(|impression| {
+                                        html! {
+                                            <div class="border border-muted rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                                <div class="flex justify-between items-start mb-3">
+                                                    <div class="flex-1">
+                                                        <div class="flex items-center gap-2 mb-2">
+                                                            {
+                                                                match &impression.status {
+                                                                    ClinicalImpressionStatus::InProgress => html! {
+                                                                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 rounded-md text-xs font-medium">
+                                                                            {"En Progreso"}
+                                                                        </span>
+                                                                    },
+                                                                    ClinicalImpressionStatus::Completed => html! {
+                                                                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium">
+                                                                            <crate::components::Check class="size-3" />
+                                                                            {"Completada"}
+                                                                        </span>
+                                                                    },
+                                                                    ClinicalImpressionStatus::EnteredInError => html! {
+                                                                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 rounded-md text-xs font-medium">
+                                                                            <crate::components::X class="size-3" />
+                                                                            {"Error"}
+                                                                        </span>
+                                                                    },
+                                                                }
+                                                            }
+                                                            if let Some(date) = impression.date {
+                                                                <span class="text-xs text-muted">
+                                                                    {date.format("%d/%m/%Y %H:%M").to_string()}
+                                                                </span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                // Summary
+                                                if let Some(summary) = &impression.summary {
+                                                    <div class="mb-3">
+                                                        <h4 class="text-sm font-semibold text-foreground mb-1">{"Resumen"}</h4>
+                                                        <p class="text-sm text-foreground whitespace-pre-wrap">{summary}</p>
+                                                    </div>
+                                                }
+
+                                                // Findings
+                                                if let Some(findings) = &impression.finding {
+                                                    if !findings.is_empty() {
+                                                        <div class="mb-3">
+                                                            <h4 class="text-sm font-semibold text-foreground mb-2">{"Hallazgos y Diagnósticos"}</h4>
+                                                            <ul class="space-y-1">
+                                                                { for findings.iter().map(|finding| {
+                                                                    if let Some(item) = &finding.item_codeable_concept {
+                                                                        html! {
+                                                                            <li class="text-sm text-foreground flex items-start gap-2">
+                                                                                <span class="text-primary mt-1">{"•"}</span>
+                                                                                <span>{&item.text}</span>
+                                                                            </li>
+                                                                        }
+                                                                    } else {
+                                                                        html! {}
+                                                                    }
+                                                                }) }
+                                                            </ul>
+                                                        </div>
+                                                    }
+                                                }
+
+                                                // Notes
+                                                if let Some(notes) = &impression.note {
+                                                    if !notes.is_empty() {
+                                                        <div>
+                                                            <h4 class="text-sm font-semibold text-foreground mb-2">{"Notas"}</h4>
+                                                            { for notes.iter().map(|note| {
+                                                                html! {
+                                                                    <div class="text-sm text-muted bg-gray-50 p-2 rounded">
+                                                                        <p class="whitespace-pre-wrap">{&note.text}</p>
+                                                                        if let Some(time) = note.time {
+                                                                            <p class="text-xs text-muted mt-1">
+                                                                                {time.format("%d/%m/%Y %H:%M").to_string()}
+                                                                            </p>
+                                                                        }
+                                                                    </div>
+                                                                }
+                                                            }) }
+                                                        </div>
+                                                    }
+                                                }
+                                            </div>
+                                        }
+                                    }) }
+                                </div>
+                            }
                         </shady_minions::ui::Card>
                     </div>
                 }
