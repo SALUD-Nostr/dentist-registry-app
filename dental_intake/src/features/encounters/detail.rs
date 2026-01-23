@@ -276,13 +276,19 @@ let handle_mark_cancelled = {
                         <shady_minions::ui::Card class="!border-0 !shadow-none">
                             <div class="flex justify-between items-center mb-3">
                                 <h2 class="text-lg font-semibold">{"Impresiones Clínicas"}</h2>
-                                <button
-                                    onclick={handle_new_impression}
-                                    class="px-3 py-1 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center gap-1"
-                                >
-                                    <crate::components::Plus class="size-4" />
-                                    {"Agregar"}
-                                </button>
+                                {if encounter.status != EncounterStatus::Finished && encounter.status != EncounterStatus::Cancelled {
+                                    html! {
+                                        <button
+                                            onclick={handle_new_impression}
+                                            class="px-3 py-1 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center gap-1"
+                                        >
+                                            <crate::components::Plus class="size-4" />
+                                            {"Agregar"}
+                                        </button>
+                                    }
+                                } else {
+                                    html! {}
+                                }}
                             </div>
 
                             if *is_loading_impressions {
@@ -294,7 +300,15 @@ let handle_mark_cancelled = {
                                 <div class="text-center py-8">
                                     <crate::components::Clipboard class="size-16 mx-auto mb-4 opacity-50 text-muted" />
                                     <p class="text-muted">{"No hay impresiones clínicas registradas"}</p>
-                                    <p class="text-sm text-muted mt-2">{"Haz clic en 'Agregar' para crear la primera impresión"}</p>
+                                    {
+                                    if encounter.status != EncounterStatus::Finished && encounter.status != EncounterStatus::Cancelled {
+                                        html! {
+                                            <p class="text-sm text-muted mt-2">{"Haz clic en 'Agregar' para crear la primera impresión"}</p>
+                                        }
+                                    } else {
+                                        html! {}
+                                    }
+                                }
                                 </div>
                             } else {
                                 <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
