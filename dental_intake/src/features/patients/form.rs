@@ -20,20 +20,20 @@ pub fn patient_form() -> Html {
     let notify_patients_changed = crate::storage::use_notify_patients_changed();
 
     // Form state
-    let given_name = use_state(|| String::new());
-    let family_name = use_state(|| String::new());
-    let birth_date = use_state(|| String::new());
+    let given_name =  use_state(String::new);
+    let family_name = use_state(String::new);
+    let birth_date =  use_state(String::new);
     let gender = use_state(|| None::<AdministrativeGender>);
-    let phone = use_state(|| String::new());
-    let email = use_state(|| String::new());
-    let street = use_state(|| String::new());
-    let city = use_state(|| String::new());
-    let state = use_state(|| String::new());
-    let postal_code = use_state(|| String::new());
-    let country = use_state(|| String::new());
+    let phone =  use_state(String::new);
+    let email =  use_state(String::new);
+    let street = use_state(String::new);
+    let city =   use_state(String::new);
+    let state =  use_state(String::new);
+    let postal_code = use_state(String::new);
+    let country = use_state(String::new);
 
     // Validation and UI state
-    let errors = use_state(|| Vec::<String>::new());
+    let errors = use_state(Vec::<String>::new);
     let is_saving = use_state(|| false);
 
     let validate_form = {
@@ -59,7 +59,6 @@ pub fn patient_form() -> Html {
 
     let handle_submit = {
         let navigator = navigator.clone();
-        let patient_store = patient_store.clone();
         let given_name = given_name.clone();
         let family_name = family_name.clone();
         let birth_date = birth_date.clone();
@@ -73,7 +72,6 @@ pub fn patient_form() -> Html {
         let country = country.clone();
         let is_saving = is_saving.clone();
         let errors = errors.clone();
-        let notify_patients_changed = notify_patients_changed.clone();
 
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default();
@@ -105,7 +103,7 @@ pub fn patient_form() -> Html {
             spawn_local(async move {
                 // Build HumanName
                 let human_name = HumanName {
-                    text: Some(format!("{} {}", given_name_val, family_name_val)),
+                    text: Some(format!("{given_name_val} {family_name_val}")),
                     family: Some(family_name_val),
                     given: Some(vec![given_name_val]),
                 };
@@ -254,7 +252,7 @@ pub fn patient_form() -> Html {
                 </div>
 
                 <form onsubmit={handle_submit}>
-                    <shady_minions::ui::Card>
+                    <shady_minions::ui::Card class="!border-0 !shadow-none">
                         <div class="space-y-6">
                             // Error messages
                             if !(*errors).is_empty() {
