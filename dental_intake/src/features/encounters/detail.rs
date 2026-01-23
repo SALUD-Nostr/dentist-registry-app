@@ -272,7 +272,7 @@ let handle_mark_cancelled = {
                         // Clinical Impressions Card
                         <shady_minions::ui::Card class="!border-0 !shadow-none">
                             <div class="flex justify-between items-center mb-3">
-                                <h2 class="text-lg font-semibold">{"Impresiones Clínicas"}</h2>
+                                <crate::components::Subtitle>{"Impresiones Clínicas"}</crate::components::Subtitle>
                                 {if encounter.status != EncounterStatus::Finished && encounter.status != EncounterStatus::Cancelled {
                                     html! {
                                         <button
@@ -381,10 +381,10 @@ fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
     html! {
         <shady_minions::ui::Card class="!border-0 !shadow-none">
             <div class="flex justify-between items-start mb-4 flex-col md:flex-row gap-2">
-                <h2 class="text-lg font-semibold flex items-center gap-2">
+                <crate::components::Subtitle class="flex items-center gap-2">
                     <crate::components::Stethoscope class="size-5 text-primary" />
                     {"Información de la Cita"}
-                </h2>
+                </crate::components::Subtitle>
                 {if encounter.status != EncounterStatus::Finished && encounter.status != EncounterStatus::Cancelled {
                     html! {
                         <div class="flex gap-2">
@@ -411,9 +411,7 @@ fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
             <div class="grid grid-cols-2 gap-4">
                 // Patient
                 <div>
-                    <label class="block text-sm font-medium text-muted mb-1">
-                        {"Paciente"}
-                    </label>
+                    <crate::components::Label>{"Paciente"}</crate::components::Label>
                     <p class="text-base font-medium text-foreground">
                         {
                             patient.full_name().unwrap_or_else(|| "Paciente".to_string())
@@ -423,9 +421,7 @@ fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
 
                 // Status
                 <div>
-                    <label class="block text-sm font-medium text-muted mb-1">
-                        {"Estado"}
-                    </label>
+                    <crate::components::Label>{"Estado"}</crate::components::Label>
                     <EncounterStatusBadge status={encounter.status} />
                 </div>
 
@@ -575,8 +571,8 @@ fn clinical_impression_card(props: &ClinicalImpressionProps) -> Html {
             // Summary
             if let Some(summary) = &impression.summary {
                 <div class="mb-3">
-                    <h4 class="text-sm font-semibold text-foreground mb-1">{"Resumen"}</h4>
-                    <p class="text-sm text-foreground whitespace-pre-wrap">{summary}</p>
+                    <crate::components::Subtitle class="text-sm font-semibold text-foreground mb-1">{"Resumen"}</crate::components::Subtitle>
+                    <crate::components::NormalText class="text-sm whitespace-pre-wrap">{summary.clone()}</crate::components::NormalText>
                 </div>
             }
 
@@ -603,11 +599,11 @@ fn clinical_impression_card(props: &ClinicalImpressionProps) -> Html {
             // Notes
             if let Some(notes) = &impression.note && !notes.is_empty() {
                 <div>
-                    <h4 class="text-sm font-semibold text-foreground mb-2">{"Notas"}</h4>
+                    <crate::components::Subtitle class="text-sm font-semibold text-foreground mb-2">{"Notas"}</crate::components::Subtitle>
                     { for notes.iter().map(|note| {
                         html! {
-                            <div class="text-sm text-muted bg-gray-50 p-2 rounded">                                                        <                                                         p class="whitespace
-                                pre-wrap">{&note.text}</p>
+                            <div class="text-sm text-muted bg-gray-50 p-2 rounded">
+                                                        <crate::components::NormalText class="whitespace pre-wrap">{note.text.clone()}</crate::components::NormalText>
                                 if let Some(time) = note.time {
                                     <p class="text-xs text-muted mt-1">
                                         {time.format("%d/%m/%Y %H:%M").to_string()}

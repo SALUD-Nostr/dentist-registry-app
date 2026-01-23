@@ -4,7 +4,9 @@
 
 pub mod icons;
 pub mod logo;
+pub mod typography;
 
 // Re-export commonly used components
 pub use icons::*;
 pub use logo::Logo;
+pub use typography::*;
