@@ -62,7 +62,7 @@ pub struct ClinicalImpression {
 }
 
 /// Workflow status of the clinical impression
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Copy)]
 #[serde(rename_all = "kebab-case")]
 pub enum ClinicalImpressionStatus {
     /// The assessment is still ongoing

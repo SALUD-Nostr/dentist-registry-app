@@ -84,12 +84,10 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
 
     // Load clinical impressions for this encounter
     {
-        let encounter_id = props.encounter_id.clone();
         let clinical_impressions = clinical_impressions.clone();
         let is_loading_impressions = is_loading_impressions.clone();
-        let clinical_impression_store = clinical_impression_store.clone();
 
-        use_effect_with(encounter_id.clone(), move |id| {
+        use_effect_with(props.encounter_id.clone(), move |id| {
             let id = id.clone();
             spawn_local(async move {
                 log!("Loading clinical impressions for encounter:", id.as_str());
@@ -191,6 +189,36 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
         })
     };
 
+    let Some(patient) = patient.as_ref() else {
+        return html! {
+            <div class="flex flex-col items-center gap-4 py-12">
+                <crate::components::X class="size-16 text-red-600" />
+                <p class="text-red-600 font-semibold text-lg">{"No se encontró el paciente"}</p>
+                <button
+                    onclick={handle_back.clone()}
+                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                    {"Volver al historial"}
+                </button>
+            </div>
+        };
+    };
+
+    let Some(encounter) = encounter.as_ref() else {
+        return html! {
+            <div class="flex flex-col items-center gap-4 py-12">
+                <crate::components::X class="size-16 text-red-600" />
+                <p class="text-red-600 font-semibold text-lg">{"No se encontró la cita"}</p>
+                <button
+                    onclick={handle_back.clone()}
+                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                    {"Volver al historial"}
+                </button>
+            </div>
+        };
+    };
+
     html! {
         <div class="flex flex-col size-full detail-page overflow-auto">
             <div class="max-w-4xl mx-auto w-full">
@@ -202,23 +230,13 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                         <crate::components::ArrowLeft class="size-4" />
                         {"Volver al Historial"}
                     </button>
-
-                    if let Some(enc) = (*encounter).as_ref() {
-                        <h1 class="text-2xl font-bold">
-                            {"Detalles de la Cita"}
-                            {
-                                if let Some(pat) = (*patient).as_ref() {
-                                    format!(" - {}", pat.full_name().unwrap_or_else(|| "Paciente".to_string()))
-                                } else {
-                                    String::new()
-                                }
-                            }
-                        </h1>
-                        <p class="text-xs text-muted">{"ID: "}{enc.id.as_ref().unwrap_or(&props.encounter_id)}</p>
-                    } else {
-                        <h1 class="text-2xl font-bold">{"Detalles de la Cita"}</h1>
-                        <p class="text-xs text-muted">{"ID: "}{&props.encounter_id}</p>
-                    }
+                    <h1 class="text-2xl font-bold">
+                        {"Detalles de la Cita"}
+                        {
+                            format!(" - {}", patient.full_name().unwrap_or_else(|| "Paciente".to_string()))
+                        }
+                    </h1>
+                    <p class="text-xs text-muted">{"ID: "}{encounter.id.as_ref().unwrap_or(&props.encounter_id)}</p>
                 </div>
 
                 if *is_loading {
@@ -241,137 +259,14 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                             </button>
                         </div>
                     </shady_minions::ui::Card>
-                } else if let Some(enc) = (*encounter).as_ref() {
+                } else  {
                     <div class="grid gap-4">
-                        // Encounter Information Card
-                        <shady_minions::ui::Card class="!border-0 !shadow-none">
-                            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                                <crate::components::Stethoscope class="size-5 text-primary" />
-                                {"Información de la Cita"}
-                            </h2>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                // Patient
-                                <div>
-                                    <label class="block text-sm font-medium text-muted mb-1">
-                                        {"Paciente"}
-                                    </label>
-                                    <p class="text-base font-medium text-foreground">
-                                        {
-                                            if let Some(pat) = (*patient).as_ref() {
-                                                pat.full_name().unwrap_or_else(|| "Paciente".to_string())
-                                            } else {
-                                                enc.subject.reference.as_ref()
-                                                    .map(|r| r.strip_prefix("Patient/").unwrap_or(r).to_string())
-                                                    .unwrap_or_else(|| "Paciente".to_string())
-                                            }
-                                        }
-                                    </p>
-                                </div>
-
-                                // Status
-                                <div>
-                                    <label class="block text-sm font-medium text-muted mb-1">
-                                        {"Estado"}
-                                    </label>
-                                    <EncounterStatusBadge status={enc.status} />
-                                </div>
-
-                                // Class/Type
-                                <div>
-                                    <label class="block text-sm font-medium text-muted mb-1">
-                                        {"Tipo de Consulta"}
-                                    </label>
-                                    <p class="text-base text-foreground">
-                                        {
-                                            match &enc.class {
-                                                EncounterClass::Ambulatory => "Consulta Ambulatoria",
-                                                EncounterClass::Emergency => "Emergencia",
-                                                EncounterClass::HomeHealth => "Consulta a Domicilio",
-                                                EncounterClass::Virtual => "Consulta Virtual",
-                                                EncounterClass::Field => "Consulta en Terreno",
-                                                EncounterClass::Inpatient => "Hospitalización",
-                                                EncounterClass::Acute => "Atención Aguda",
-                                            }
-                                        }
-                                    </p>
-                                </div>
-
-                                // Date and Time
-                                if let Some(period) = &enc.period
-                                    && let Some(start) = period.start {
-                                    <div>
-                                        <label class="block text-sm font-medium text-muted mb-1">
-                                            {"Fecha"}
-                                        </label>
-                                        <p class="text-base text-foreground">
-                                            {start.format("%d/%m/%Y").to_string()}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-muted mb-1">
-                                            {"Hora"}
-                                        </label>
-                                        <p class="text-base text-foreground">
-                                            {format!("{:02}:{:02}", start.hour(), start.minute())}
-                                        </p>
-                                    </div>
-
-                                    // Duration
-                                    {
-                                        period.end.map(|end| {
-                                            let duration = end.signed_duration_since(start);
-                                            let minutes = duration.num_minutes();
-                                            let duration_str = if minutes >= 60 {
-                                                let hours = minutes / 60;
-                                                let mins = minutes % 60;
-                                                if mins > 0 {
-                                                    format!("{} hora(s) {} min", hours, mins)
-                                                } else {
-                                                    format!("{} hora(s)", hours)
-                                                }
-                                            } else {
-                                                format!("{} minutos", minutes)
-                                            };
-                                            html! {
-                                                <div>
-                                                    <label class="block text-sm font-medium text-muted mb-1">
-                                                        {"Duración"}
-                                                    </label>
-                                                    <p class="text-base text-foreground">
-                                                        {duration_str}
-                                                    </p>
-                                                </div>
-                                            }
-                                        })
-                                    }
-                                }
-
-                                // Reason
-                                if let Some(reason_codes) = &enc.reason_code {
-                                    if !reason_codes.is_empty() {
-                                        <div class="md:col-span-2">
-                                            <label class="block text-sm font-medium text-muted mb-1">
-                                                {"Motivo de Consulta"}
-                                            </label>
-                                            <div class="space-y-2">
-                                                { for reason_codes.iter().map(|reason| {
-                                                    html! {
-                                                        <p class="text-base text-foreground bg-gray-50 p-3 rounded-lg">
-                                                            {&reason.text}
-                                                        </p>
-                                                    }
-                                                }) }
-                                            </div>
-                                        </div>
-                                    }
-                                }
-                            </div>
-                        </shady_minions::ui::Card>
+                        // Encounter Information
+                        <EncounterDetailCard encounter={encounter.clone()} patient={patient.clone()} />
 
                         // Action Buttons
                         {
-                            if enc.status != EncounterStatus::Finished && enc.status != EncounterStatus::Cancelled {
+                            if encounter.status != EncounterStatus::Finished && encounter.status != EncounterStatus::Cancelled {
                                 html! {
                                     <div class="flex gap-3 justify-end">
                                         <button
@@ -422,94 +317,7 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                             } else {
                                 <div class="space-y-4">
                                     { for (*clinical_impressions).iter().map(|impression| {
-                                        html! {
-                                            <div class="border border-muted/30 rounded-lg p-4 hover:bg-gray-50 transition-colors shadow-md">
-                                                <div class="flex justify-between items-start mb-3">
-                                                    <div class="flex-1">
-                                                        <div class="flex items-center gap-2 mb-2">
-                                                            {
-                                                                match &impression.status {
-                                                                    ClinicalImpressionStatus::InProgress => html! {
-                                                                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 rounded-md text-xs font-medium">
-                                                                            {"En Progreso"}
-                                                                        </span>
-                                                                    },
-                                                                    ClinicalImpressionStatus::Completed => html! {
-                                                                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium">
-                                                                            <crate::components::Check class="size-3" />
-                                                                            {"Completada"}
-                                                                        </span>
-                                                                    },
-                                                                    ClinicalImpressionStatus::EnteredInError => html! {
-                                                                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 rounded-md text-xs font-medium">
-                                                                            <crate::components::X class="size-3" />
-                                                                            {"Error"}
-                                                                        </span>
-                                                                    },
-                                                                }
-                                                            }
-                                                            if let Some(date) = impression.date {
-                                                                <span class="text-xs text-muted">
-                                                                    {date.format("%d/%m/%Y %H:%M").to_string()}
-                                                                </span>
-                                                            }
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                // Summary
-                                                if let Some(summary) = &impression.summary {
-                                                    <div class="mb-3">
-                                                        <h4 class="text-sm font-semibold text-foreground mb-1">{"Resumen"}</h4>
-                                                        <p class="text-sm text-foreground whitespace-pre-wrap">{summary}</p>
-                                                    </div>
-                                                }
-
-                                                // Findings
-                                                if let Some(findings) = &impression.finding {
-                                                    if !findings.is_empty() {
-                                                        <div class="mb-3">
-                                                            <h4 class="text-sm font-semibold text-foreground mb-2">{"Hallazgos y Diagnósticos"}</h4>
-                                                            <ul class="space-y-1">
-                                                                { for findings.iter().map(|finding| {
-                                                                    if let Some(item) = &finding.item_codeable_concept {
-                                                                        html! {
-                                                                            <li class="text-sm text-foreground flex items-start gap-2">
-                                                                                <span class="text-primary mt-1">{"•"}</span>
-                                                                                <span>{&item.text}</span>
-                                                                            </li>
-                                                                        }
-                                                                    } else {
-                                                                        html! {}
-                                                                    }
-                                                                }) }
-                                                            </ul>
-                                                        </div>
-                                                    }
-                                                }
-
-                                                // Notes
-                                                if let Some(notes) = &impression.note {
-                                                    if !notes.is_empty() {
-                                                        <div>
-                                                            <h4 class="text-sm font-semibold text-foreground mb-2">{"Notas"}</h4>
-                                                            { for notes.iter().map(|note| {
-                                                                html! {
-                                                                    <div class="text-sm text-muted bg-gray-50 p-2 rounded">
-                                                                        <p class="whitespace-pre-wrap">{&note.text}</p>
-                                                                        if let Some(time) = note.time {
-                                                                            <p class="text-xs text-muted mt-1">
-                                                                                {time.format("%d/%m/%Y %H:%M").to_string()}
-                                                                            </p>
-                                                                        }
-                                                                    </div>
-                                                                }
-                                                            }) }
-                                                        </div>
-                                                    }
-                                                }
-                                            </div>
-                                        }
+                                        html! { <ClinicalImpressionCard impression={impression.clone()} /> }
                                     }) }
                                 </div>
                             }
@@ -555,5 +363,240 @@ fn encounter_status_badge(props: &EncounterStatusBadgeProps) -> Html {
             <crate::components::Calendar class="size-4" />
             {inner_text}
         </span>
+    }
+}
+
+#[derive(Properties, PartialEq, Clone)]
+struct EncounterDetailCardProps {
+    pub encounter: Encounter,
+    pub patient: Patient,
+}
+
+#[function_component(EncounterDetailCard)]
+fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
+    let EncounterDetailCardProps { encounter, patient } = props;
+    let Some(period) = encounter.period.as_ref() else {
+        return html! {};
+    };
+    let Some(start) = period.start else {
+        return html! {};
+    };
+    html! {
+        <shady_minions::ui::Card class="!border-0 !shadow-none">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <crate::components::Stethoscope class="size-5 text-primary" />
+                {"Información de la Cita"}
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                // Patient
+                <div>
+                    <label class="block text-sm font-medium text-muted mb-1">
+                        {"Paciente"}
+                    </label>
+                    <p class="text-base font-medium text-foreground">
+                        {
+                            patient.full_name().unwrap_or_else(|| "Paciente".to_string())
+                        }
+                    </p>
+                </div>
+
+                // Status
+                <div>
+                    <label class="block text-sm font-medium text-muted mb-1">
+                        {"Estado"}
+                    </label>
+                    <EncounterStatusBadge status={encounter.status} />
+                </div>
+
+                // Class/Type
+                <div>
+                    <label class="block text-sm font-medium text-muted mb-1">
+                        {"Tipo de Consulta"}
+                    </label>
+                    <p class="text-base text-foreground">
+                        {
+                            match &encounter.class {
+                                EncounterClass::Ambulatory => "Consulta Ambulatoria",
+                                EncounterClass::Emergency => "Emergencia",
+                                EncounterClass::HomeHealth => "Consulta a Domicilio",
+                                EncounterClass::Virtual => "Consulta Virtual",
+                                EncounterClass::Field => "Consulta en Terreno",
+                                EncounterClass::Inpatient => "Hospitalización",
+                                EncounterClass::Acute => "Atención Aguda",
+                            }
+                        }
+                    </p>
+                </div>
+
+                // Date and Time
+                <div>
+                    <label class="block text-sm font-medium text-muted mb-1">
+                        {"Fecha"}
+                    </label>
+                    <p class="text-base text-foreground">
+                        {start.format("%d/%m/%Y").to_string()}
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-muted mb-1">
+                        {"Hora"}
+                    </label>
+                    <p class="text-base text-foreground">
+                        {format!("{:02}:{:02}", start.hour(), start.minute())}
+                    </p>
+                </div>
+
+                // Duration
+                {
+                    period.end.map(|end| {
+                        let duration = end.signed_duration_since(start);
+                        let minutes = duration.num_minutes();
+                        let duration_str = if minutes >= 60 {
+                            let hours = minutes / 60;
+                            let mins = minutes % 60;
+                            if mins > 0 {
+                                format!("{hours} hora(s) {mins} min")
+                            } else {
+                                format!("{hours} hora(s)", )
+                            }
+                        } else {
+                            format!("{minutes} minutos", )
+                        };
+                        html! {
+                            <div>
+                                <label class="block text-sm font-medium text-muted mb-1">
+                                    {"Duración"}
+                                </label>
+                                <p class="text-base text-foreground">
+                                    {duration_str}
+                                </p>
+                            </div>
+                        }
+                    })
+                }
+
+                // Reason
+                if let Some(reason_codes) = &encounter.reason_code {
+                    if !reason_codes.is_empty() {
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-muted mb-1">
+                                {"Motivo de Consulta"}
+                            </label>
+                            <div class="space-y-2">
+                                { for reason_codes.iter().map(|reason| {
+                                    html! {
+                                        <p class="text-base text-foreground bg-gray-50 p-3 rounded-lg">
+                                            {&reason.text}
+                                        </p>
+                                    }
+                                }) }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </shady_minions::ui::Card>
+    }
+}
+
+#[derive(Properties, PartialEq)]
+struct ClinicalImpressionStatusBadgeProps {
+    pub status: ClinicalImpressionStatus,
+}
+
+#[function_component(ClinicalImpressionStatusBadge)]
+fn clinical_impression_status_badge(props: &ClinicalImpressionStatusBadgeProps) -> Html {
+    let class = match props.status {
+        ClinicalImpressionStatus::InProgress => "bg-purple-100 text-purple-800",
+        ClinicalImpressionStatus::Completed => "bg-green-100 text-green-800",
+        ClinicalImpressionStatus::EnteredInError => "bg-red-100 text-red-800",
+    };
+
+    let inner_text = match props.status {
+        ClinicalImpressionStatus::InProgress => "En Progreso",
+        ClinicalImpressionStatus::Completed => "Completada",
+        ClinicalImpressionStatus::EnteredInError => "Error",
+    };
+
+    html! {
+        <span class={classes!(class, "inline-flex",  "items-center", "gap-1", "px-2", "py-1", "rounded-md", "text-xs", "font-medium")}>
+            <crate::components::Check class="size-4" />
+            {inner_text}
+        </span>
+    }
+}
+
+#[derive(Properties, PartialEq)]
+struct ClinicalImpressionProps {
+    pub impression: ClinicalImpression,
+}
+
+#[function_component(ClinicalImpressionCard)]
+fn clinical_impression_card(props: &ClinicalImpressionProps) -> Html {
+    let ClinicalImpressionProps { impression } = props;
+    let Some(date) = impression.date else {
+        return html! {};
+    };
+    html! {
+        <div class="border border-muted/30 rounded-lg p-4 hover:bg-gray-50 transition-colors shadow-md">
+            <div class="flex justify-between items-start mb-3">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                        <ClinicalImpressionStatusBadge status={impression.status} />
+                        <span class="text-xs text-muted">
+                            {date.format("%d/%m/%Y %H:%M").to_string()}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            // Summary
+            if let Some(summary) = &impression.summary {
+                <div class="mb-3">
+                    <h4 class="text-sm font-semibold text-foreground mb-1">{"Resumen"}</h4>
+                    <p class="text-sm text-foreground whitespace-pre-wrap">{summary}</p>
+                </div>
+            }
+
+            // Findings
+            if let Some(findings) = &impression.finding && !findings.is_empty() {
+                <div class="mb-3">
+                    <h4 class="text-sm font-semibold text-foreground mb-2">{"Hallazgos y Diagnósticos"}</h4>
+                    <ul class="space-y-1">
+
+                        { for findings.iter().map(|finding| {
+                            finding.item_codeable_concept.as_ref().map_or_else(|| html! {}, |item| {
+                                html! {
+                                    <li class="text-sm text-foreground flex items-start gap-2">
+                                        <span class="text-primary mt-1">{"•"}</span>
+                                        <span>{&item.text}</span>
+                                    </li>
+                                }
+                            })
+                        }) }
+                    </ul>
+                </div>
+            }
+
+            // Notes
+            if let Some(notes) = &impression.note && !notes.is_empty() {
+                <div>
+                    <h4 class="text-sm font-semibold text-foreground mb-2">{"Notas"}</h4>
+                    { for notes.iter().map(|note| {
+                        html! {
+                            <div class="text-sm text-muted bg-gray-50 p-2 rounded">                                                        <                                                         p class="whitespace
+                                pre-wrap">{&note.text}</p>
+                                if let Some(time) = note.time {
+                                    <p class="text-xs text-muted mt-1">
+                                        {time.format("%d/%m/%Y %H:%M").to_string()}
+                                    </p>
+                                }
+                            </div>
+                        }
+                    }) }
+                </div>
+            }
+        </div>
     }
 }
