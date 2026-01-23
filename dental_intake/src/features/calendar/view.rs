@@ -99,7 +99,7 @@ fn calendar_view_inner() -> HtmlResult {
                 </paravida_components::typography::Highlight>
                 <crate::shared::SyncStatus />
             </div>
-            <paravida_components::Card class="!self-stretch !max-h-[calc(96vh-4rem)] !max-w-none !p-0">
+            <paravida_components::Card class="!self-stretch !max-h-[calc(96vh-4rem)] !max-w-none !p-0 border-muted/30 shadow-lg">
             <style>
                 {r"
                 .fc-header-toolbar {

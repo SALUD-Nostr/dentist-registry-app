@@ -248,7 +248,7 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                 } else if let Some(enc) = (*encounter).as_ref() {
                     <div class="grid gap-4">
                         // Encounter Information Card
-                        <shady_minions::ui::Card class="detail-card">
+                        <shady_minions::ui::Card class="border-muted/30 shadow-lg">
                             <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
                                 <crate::components::Stethoscope class="size-5 text-primary" />
                                 {"Información de la Cita"}
@@ -454,7 +454,7 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                         }
 
                         // Clinical Impressions Card
-                        <shady_minions::ui::Card class="detail-card">
+                        <shady_minions::ui::Card class="border-muted/30 shadow-lg">
                             <div class="flex justify-between items-center mb-3">
                                 <h2 class="text-lg font-semibold">{"Impresiones Clínicas"}</h2>
                                 <button
@@ -481,7 +481,7 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                                 <div class="space-y-4">
                                     { for (*clinical_impressions).iter().map(|impression| {
                                         html! {
-                                            <div class="border border-muted rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                            <div class="border border-muted/30 rounded-lg p-4 hover:bg-gray-50 transition-colors shadow-md">
                                                 <div class="flex justify-between items-start mb-3">
                                                     <div class="flex-1">
                                                         <div class="flex items-center gap-2 mb-2">

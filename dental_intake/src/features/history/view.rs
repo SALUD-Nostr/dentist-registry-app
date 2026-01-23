@@ -227,7 +227,7 @@ pub fn history_view() -> Html {
 
             // Table with suspending list
             <div class="flex-1">
-                <div class="bg-white rounded-lg shadow-md border border-muted/30 overflow-hidden">
+                <div class="bg-white rounded-lg shadow-lg border border-muted/30 overflow-hidden">
                     // Header
                     <div class="grid grid-cols-12 gap-4 bg-primary/10 px-6 py-3 font-semibold text-xs sm:text-sm text-foreground border-b border-muted/30">
                         <div class="col-span-3">{"Fecha"}</div>

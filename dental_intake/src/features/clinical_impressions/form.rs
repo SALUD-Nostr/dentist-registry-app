@@ -274,7 +274,7 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
                 }
 
                 <form onsubmit={on_submit}>
-                    <shady_minions::ui::Card>
+                    <shady_minions::ui::Card class="border-muted/30 shadow-lg">
                         <div class="space-y-6">
                             // Summary
                             <div>

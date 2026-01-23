@@ -168,7 +168,7 @@ fn doctors_list_view_inner() -> Html {
             </div>
 
             <div class="flex-1">
-                <div class="bg-white rounded-lg shadow-md border border-muted/30 overflow-hidden">
+                <div class="bg-white rounded-lg shadow-lg border border-muted/30 overflow-hidden">
                     // Header
                     <div class="grid grid-cols-9 gap-4 bg-primary/10 px-6 py-3 font-semibold text-sm text-foreground border-b border-muted/30 sticky top-0 z-10">
                         <div class="col-span-5">{"Nombre"}</div>

@@ -181,26 +181,4 @@
     }
 }
 
-/* Compact cards */
-.detail-card {
-    padding: 1rem !important;
-    margin-bottom: 1rem !important;
-}
 
-.detail-card h2 {
-    font-size: 1.125rem !important;
-    margin-bottom: 0.75rem !important;
-}
-
-.detail-card .grid {
-    gap: 0.75rem !important;
-}
-
-.detail-card label {
-    font-size: 0.75rem !important;
-    margin-bottom: 0.25rem !important;
-}
-
-.detail-card p {
-    font-size: 0.875rem !important;
-}

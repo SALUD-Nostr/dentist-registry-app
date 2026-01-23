@@ -82,7 +82,7 @@ fn home_card(props: &HomeCardProps) -> Html {
     html! {
         <button
             onclick={onclick}
-            class="flex sm:flex-col items-center gap-4 p-6 bg-white rounded-xl border border-muted/30 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            class="flex sm:flex-col items-center gap-4 p-6 bg-white rounded-xl border border-muted/30 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
         >
             { icon.clone() }
             <div class="flex flex-col gap-1 sm:gap-2 text-start sm:text-center">

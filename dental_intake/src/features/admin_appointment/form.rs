@@ -373,7 +373,7 @@ fn doctor_selection_step(props: &FormStepProps) -> Html {
         "rounded-lg",
         "py-3",
         "px-4",
-        "shadow-sm",
+        
         "border-primary",
         "focus:outline-none",
         "focus:border-secondary",
@@ -476,7 +476,7 @@ fn doctor_selection_step(props: &FormStepProps) -> Html {
             } else {
                 // Doctors Table
                 <div class="flex-1">
-                    <div class="bg-white rounded-lg shadow-md border border-muted/30 overflow-hidden">
+                    <div class="bg-white rounded-lg shadow-lg border border-muted/30 overflow-hidden">
                         // Header
                         <div class="grid grid-cols-12 gap-4 bg-primary/10 px-6 py-3 font-semibold text-sm text-foreground border-b border-muted/30">
                             <div class="col-span-6">{"Nombre"}</div>
@@ -1048,7 +1048,7 @@ fn schedule_calendar(props: &ScheduleCalendarProps) -> Html {
         "rounded-lg",
         "py-3",
         "px-4",
-        "shadow-sm",
+        
         "border-primary",
         "focus:outline-none",
         "focus:border-secondary",
@@ -1097,7 +1097,7 @@ fn schedule_calendar(props: &ScheduleCalendarProps) -> Html {
                 <ThirtyMinuteSlotPicker slot={end_slot.clone()} />
             </div>
 
-            <paravida_components::Card class="!p-0 !max-w-none mb-2">
+            <paravida_components::Card class="!p-0 !max-w-none mb-2 border-muted/30 shadow-lg">
                 <style>
                     {r"
                     .fc-header-toolbar {
@@ -1206,7 +1206,7 @@ fn confirmation_step(props: &FormStepProps) -> Html {
                         "rounded-lg",
                         "py-3",
                         "px-4",
-                        "shadow-sm",
+                        
                         "border-primary",
                         "focus:outline-none",
                         "focus:border-secondary",
@@ -1292,7 +1292,7 @@ fn appointment_preview(props: &AppointmentPreviewProps) -> Html {
         .to_string();
 
     html! {
-        <paravida_components::Card class="!p-0">
+        <paravida_components::Card class="!p-0 border-muted/30 shadow-lg">
             <div class="flex flex-col sm:flex-row min-h-64 flex-1 w-full">
                 <div
                     class={room_banner_class}>

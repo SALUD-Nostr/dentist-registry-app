@@ -132,7 +132,7 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                         </div>
                     </div>
                 } else if let Some(err) = (*error).as_ref() {
-                    <shady_minions::ui::Card class="detail-card">
+                    <shady_minions::ui::Card class="border-muted/30 shadow-lg">
                         <div class="flex flex-col items-center gap-4 py-12">
                             <crate::components::X class="size-16 text-red-600" />
                             <p class="text-red-600 font-semibold text-lg">{err}</p>
@@ -146,125 +146,128 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                     </shady_minions::ui::Card>
                 } else if let Some(p) = (*patient).as_ref() {
                     <div class="grid gap-4">
-                        // Personal Information Card
-                        <shady_minions::ui::Card class="detail-card">
-                            <div class="p-6">
-                                <div class="text-2xl font-bold mb-4">
-                                    {"Información Personal"}
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-muted mb-1">{"Nombre Completo"}</label>
-                                        <p class="text-base font-medium text-foreground">
-                                            {p.full_name().unwrap_or_else(|| "-".to_string())}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-muted mb-1">{"Género"}</label>
-                                        <p class="text-base text-foreground">
-                                            {match &p.gender {
-                                                Some(AdministrativeGender::Male) => "Masculino",
-                                                Some(AdministrativeGender::Female) => "Femenino",
-                                                Some(AdministrativeGender::Other) => "Otro",
-                                                Some(AdministrativeGender::Unknown) | None => "-",
-                                            }}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-muted mb-1">{"Fecha de Nacimiento"}</label>
-                                        <p class="text-base text-foreground">
-                                            {p.birth_date
-                                                .map(|bd| bd.format("%d/%m/%Y").to_string())
-                                                .unwrap_or_else(|| "-".to_string())}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-muted mb-1">{"Edad"}</label>
-                                        <p class="text-base text-foreground">
-                                            {p.birth_date.map(|bd| format!("{} años", chrono::Local::now().date_naive().years_since(bd).unwrap_or(0))).unwrap_or_else(|| "-".to_string())}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-muted mb-1">{"Estado"}</label>
-                                        <p class="text-base">
-                                            if p.active.unwrap_or(false) {
-                                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md text-sm font-medium">
-                                                    <crate::components::Check class="size-4" />
-                                                    {"Activo"}
-                                                </span>
-                                            } else {
-                                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-sm font-medium">
-                                                    {"Inactivo"}
-                                                </span>
-                                            }
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </shady_minions::ui::Card>
-
-                        // Contact Information Card
-                        if p.telecom.is_some() && !p.telecom.as_ref().unwrap().is_empty() {
-                            <shady_minions::ui::Card class="detail-card">
+                        // Two column layout for patient info and contact
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            // Personal Information Card
+                            <shady_minions::ui::Card class="border-muted/30 shadow-lg">
                                 <div class="p-6">
-                                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                                        <svg class="size-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                        </svg>
-                                        {"Información de Contacto"}
-                                    </h2>
+                                    <div class="text-2xl font-bold mb-4">
+                                        {"Información Personal"}
+                                    </div>
                                     <div class="space-y-4">
-                                        { for p.telecom.as_ref().unwrap().iter().map(|contact| {
-                                            html! {
-                                                <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                                                    <div class="mt-0.5">
-                                                        {match contact.system {
-                                                            ContactPointSystem::Phone => html! {
-                                                                <svg class="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                                                </svg>
-                                                            },
-                                                            ContactPointSystem::Email => html! {
-                                                                <svg class="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2h-1H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                                </svg>
-                                                            },
-                                                            ContactPointSystem::Fax => html! {
-                                                                <svg class="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1 1v14a1 1 0 001-1v10a2 2 0 002 2z" />
-                                                                </svg>
-                                                            },
-                                                            ContactPointSystem::Sms => html! {
-                                                                <svg class="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 012 2h-5l-5 5v-5z" />
-                                                                </svg>
-                                                            },
-                                                        }}
-                                                    </div>
-                                                    <div class="flex-1">
-                                                        <p class="text-sm font-medium text-muted mb-1">
-                                                            {match contact.system {
-                                                                ContactPointSystem::Phone => "Teléfono",
-                                                                ContactPointSystem::Email => "Email",
-                                                                ContactPointSystem::Fax => "Fax",
-                                                                ContactPointSystem::Sms => "SMS",
-                                                            }}
-                                                        </p>
-                                                        <p class="text-base font-medium text-foreground">
-                                                            {&contact.value}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            }
-                                        }) }
+                                        <div>
+                                            <label class="block text-sm font-medium text-muted mb-1">{"Nombre Completo"}</label>
+                                            <p class="text-base font-medium text-foreground">
+                                                {p.full_name().unwrap_or_else(|| "-".to_string())}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-muted mb-1">{"Género"}</label>
+                                            <p class="text-base text-foreground">
+                                                {match &p.gender {
+                                                    Some(AdministrativeGender::Male) => "Masculino",
+                                                    Some(AdministrativeGender::Female) => "Femenino",
+                                                    Some(AdministrativeGender::Other) => "Otro",
+                                                    Some(AdministrativeGender::Unknown) | None => "-",
+                                                }}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-muted mb-1">{"Fecha de Nacimiento"}</label>
+                                            <p class="text-base text-foreground">
+                                                {p.birth_date
+                                                    .map(|bd| bd.format("%d/%m/%Y").to_string())
+                                                    .unwrap_or_else(|| "-".to_string())}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-muted mb-1">{"Edad"}</label>
+                                            <p class="text-base text-foreground">
+                                                {p.birth_date.map(|bd| format!("{} años", chrono::Local::now().date_naive().years_since(bd).unwrap_or(0))).unwrap_or_else(|| "-".to_string())}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-muted mb-1">{"Estado"}</label>
+                                            <p class="text-base">
+                                                if p.active.unwrap_or(false) {
+                                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md text-sm font-medium">
+                                                        <crate::components::Check class="size-4" />
+                                                        {"Activo"}
+                                                    </span>
+                                                } else {
+                                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-sm font-medium">
+                                                        {"Inactivo"}
+                                                    </span>
+                                                }
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </shady_minions::ui::Card>
-                        }
+
+                            // Contact Information Card
+                            if p.telecom.is_some() && !p.telecom.as_ref().unwrap().is_empty() {
+                                <shady_minions::ui::Card class="border-muted/30 shadow-lg">
+                                    <div class="p-6">
+                                        <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                                            <svg class="size-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                            </svg>
+                                            {"Información de Contacto"}
+                                        </h2>
+                                        <div class="space-y-4">
+                                            { for p.telecom.as_ref().unwrap().iter().map(|contact| {
+                                                html! {
+                                                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                                                        <div class="mt-0.5">
+                                                            {match contact.system {
+                                                                ContactPointSystem::Phone => html! {
+                                                                    <svg class="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                                                    </svg>
+                                                                },
+                                                                ContactPointSystem::Email => html! {
+                                                                    <svg class="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2h-1H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                                    </svg>
+                                                                },
+                                                                ContactPointSystem::Fax => html! {
+                                                                    <svg class="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1 1v14a1 1 0 001-1v10a2 2 0 002 2z" />
+                                                                    </svg>
+                                                                },
+                                                                ContactPointSystem::Sms => html! {
+                                                                    <svg class="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 012 2h-5l-5 5v-5z" />
+                                                                    </svg>
+                                                                },
+                                                            }}
+                                                        </div>
+                                                        <div class="flex-1">
+                                                            <p class="text-sm font-medium text-muted mb-1">
+                                                                {match contact.system {
+                                                                    ContactPointSystem::Phone => "Teléfono",
+                                                                    ContactPointSystem::Email => "Email",
+                                                                    ContactPointSystem::Fax => "Fax",
+                                                                    ContactPointSystem::Sms => "SMS",
+                                                                }}
+                                                            </p>
+                                                            <p class="text-base font-medium text-foreground">
+                                                                {&contact.value}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            }) }
+                                        </div>
+                                    </div>
+                                </shady_minions::ui::Card>
+                            }
+                        </div>
 
                         // Address Information Card
                         if p.address.is_some() && !p.address.as_ref().unwrap().is_empty() {
-                            <shady_minions::ui::Card class="detail-card">
+                            <shady_minions::ui::Card class="border-muted/30 shadow-lg">
                                 <div class="p-6">
                                     <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
                                         <svg class="size-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -317,7 +320,7 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                         }
 
                         // Encounters Card
-                        <shady_minions::ui::Card class="detail-card">
+                        <shady_minions::ui::Card class="border-muted/30 shadow-lg">
                             <div class="p-6">
                                 <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
                                     <crate::components::Stethoscope class="size-6 text-primary" />
@@ -381,7 +384,7 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                                                 <div
                                                     key={encounter_id.clone()}
                                                     onclick={onclick}
-                                                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border border-l-4 hover:border-l-primary border-l-transparent"
+                                                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border border-muted/30 shadow-lg hover:border-l-4 hover:border-primary border-l-transparent"
                                                 >
                                                     <div class="flex items-center gap-4 flex-1 min-w-0">
                                                         <div class="text-2xl font-bold text-primary">
