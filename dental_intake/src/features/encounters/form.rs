@@ -381,7 +381,7 @@ pub fn encounter_form() -> Html {
                 </div>
 
                 // Step content
-                <shady_minions::ui::Card>
+                <shady_minions::ui::Card class="!border-0 !shadow-none">
                     if *current_step == FormStep::SelectPatient {
                         // Step 1: Patient Search
                         <div class="space-y-6">
@@ -687,7 +687,6 @@ pub fn encounter_form() -> Html {
                                                 <p class="text-xs text-muted mb-1">{"Tipo"}</p>
                                                 <p class="font-medium text-foreground">
                                                     {match *appointment_class {
-                                                        EncounterClass::Ambulatory => "Consulta Ambulatoria",
                                                         EncounterClass::Emergency => "Emergencia",
                                                         EncounterClass::HomeHealth => "Visita a Domicilio",
                                                         EncounterClass::Virtual => "Consulta Virtual",

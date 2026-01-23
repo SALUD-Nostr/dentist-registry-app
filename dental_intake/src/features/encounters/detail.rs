@@ -233,9 +233,6 @@ let handle_mark_cancelled = {
                     </button>
                     <h1 class="text-2xl font-bold">
                         {"Detalles de la Cita"}
-                        {
-                            format!(" - {}", patient.full_name().unwrap_or_else(|| "Paciente".to_string()))
-                        }
                     </h1>
                     <p class="text-xs text-muted">{"ID: "}{encounter.id.as_ref().unwrap_or(&props.encounter_id)}</p>
                 </div>
@@ -383,14 +380,14 @@ fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
     };
     html! {
         <shady_minions::ui::Card class="!border-0 !shadow-none">
-            <div class="flex justify-between items-start mb-4">
+            <div class="flex justify-between items-start mb-4 flex-col md:flex-row gap-2">
                 <h2 class="text-lg font-semibold flex items-center gap-2">
                     <crate::components::Stethoscope class="size-5 text-primary" />
                     {"Información de la Cita"}
                 </h2>
                 {if encounter.status != EncounterStatus::Finished && encounter.status != EncounterStatus::Cancelled {
                     html! {
-<div class="flex gap-2">
+                        <div class="flex gap-2">
                             <button
                                 class="px-3 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2 text-sm"
                                 onclick={props.on_mark_cancelled.clone()}
@@ -411,7 +408,7 @@ fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
                     html! {}
                 }}
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4">
                 // Patient
                 <div>
                     <label class="block text-sm font-medium text-muted mb-1">
@@ -440,11 +437,11 @@ fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
                     <p class="text-base text-foreground">
                         {
                             match &encounter.class {
-                                EncounterClass::Ambulatory => "Consulta Ambulatoria",
+                                EncounterClass::Ambulatory => "Ambulatoria",
                                 EncounterClass::Emergency => "Emergencia",
-                                EncounterClass::HomeHealth => "Consulta a Domicilio",
-                                EncounterClass::Virtual => "Consulta Virtual",
-                                EncounterClass::Field => "Consulta en Terreno",
+                                EncounterClass::HomeHealth => "Domiciliar",
+                                EncounterClass::Virtual => "Virtual",
+                                EncounterClass::Field => "De Campo",
                                 EncounterClass::Inpatient => "Hospitalización",
                                 EncounterClass::Acute => "Atención Aguda",
                             }

@@ -68,7 +68,7 @@ fn app_switch() -> Html {
         "ease-in-out",
     );
     let visible_class = classes!("translate-x-0", "pointer-events-auto",);
-    let invisible_class = classes!("-translate-x-full", "absolute", "pointer-events-none",);
+    let invisible_class = classes!("-translate-x-[400%]", "absolute", "pointer-events-none",);
 
     let loader = html! {
         <div class="flex h-full w-full items-center justify-center">

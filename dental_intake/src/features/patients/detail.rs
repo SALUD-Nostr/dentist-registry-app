@@ -2,7 +2,9 @@
 
 use chrono::Datelike;
 use gloo_console::log;
-use salud_types::{AdministrativeGender, ContactPointSystem, Encounter, EncounterClass, EncounterStatus, Patient};
+use salud_types::{
+    AdministrativeGender, ContactPointSystem, Encounter, EncounterClass, EncounterStatus, Patient,
+};
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -19,12 +21,20 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
     let encounter_store = crate::storage::use_encounter_store();
 
     let patient = use_state(|| None::<Patient>);
-    let encounters = use_state(|| Vec::<Encounter>::new());
+    let encounters = use_state(Vec::<Encounter>::new);
     let sorted_encounters = {
         let mut encs = (*encounters).clone();
         encs.sort_by(|a, b| {
-            let date_a = a.period.as_ref().and_then(|p| p.start).unwrap_or_else(chrono::Utc::now);
-            let date_b = b.period.as_ref().and_then(|p| p.start).unwrap_or_else(chrono::Utc::now);
+            let date_a = a
+                .period
+                .as_ref()
+                .and_then(|p| p.start)
+                .unwrap_or_else(chrono::Utc::now);
+            let date_b = b
+                .period
+                .as_ref()
+                .and_then(|p| p.start)
+                .unwrap_or_else(chrono::Utc::now);
             date_b.cmp(&date_a)
         });
         encs
@@ -35,13 +45,11 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
 
     // Load patient on mount
     {
-        let patient_id = props.patient_id.clone();
         let patient = patient.clone();
         let is_loading = is_loading.clone();
         let error = error.clone();
-        let patient_store = patient_store.clone();
 
-        use_effect_with(patient_id.clone(), move |id| {
+        use_effect_with(props.patient_id.clone(), move |id| {
             let id = id.clone();
             spawn_local(async move {
                 log!("Loading patient:", id.as_str());
@@ -58,7 +66,7 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                     }
                     Err(e) => {
                         log!("Error loading patient:", format!("{:?}", e));
-                        error.set(Some(format!("Error al cargar paciente: {:?}", e)));
+                        error.set(Some(format!("Error al cargar paciente: {e:?}",)));
                         is_loading.set(false);
                     }
                 }
@@ -147,14 +155,26 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                 } else if let Some(p) = (*patient).as_ref() {
                     <div class="grid gap-4">
                         // Two column layout for patient info and contact
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             // Personal Information Card
                             <shady_minions::ui::Card class="border-muted/30 shadow-lg">
                                 <div class="p-6">
-                                    <div class="text-2xl font-bold mb-4">
+                                    <div class="text-2xl font-bold mb-4 flex items-center gap-2 justify-between">
                                         {"Información Personal"}
+                                        <p class="text-base">
+                                            if p.active.unwrap_or(false) {
+                                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md text-sm font-medium">
+                                                    <crate::components::Check class="size-4" />
+                                                    {"Activo"}
+                                                </span>
+                                            } else {
+                                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-sm font-medium">
+                                                    {"Inactivo"}
+                                                </span>
+                                            }
+                                        </p>
                                     </div>
-                                    <div class="space-y-4">
+                                    <div class="grid grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-muted mb-1">{"Nombre Completo"}</label>
                                             <p class="text-base font-medium text-foreground">
@@ -186,21 +206,6 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                                                 {p.birth_date.map(|bd| format!("{} años", chrono::Local::now().date_naive().years_since(bd).unwrap_or(0))).unwrap_or_else(|| "-".to_string())}
                                             </p>
                                         </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-muted mb-1">{"Estado"}</label>
-                                            <p class="text-base">
-                                                if p.active.unwrap_or(false) {
-                                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md text-sm font-medium">
-                                                        <crate::components::Check class="size-4" />
-                                                        {"Activo"}
-                                                    </span>
-                                                } else {
-                                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-sm font-medium">
-                                                        {"Inactivo"}
-                                                    </span>
-                                                }
-                                            </p>
-                                        </div>
                                     </div>
                                 </div>
                             </shady_minions::ui::Card>
@@ -215,7 +220,7 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                                             </svg>
                                             {"Información de Contacto"}
                                         </h2>
-                                        <div class="space-y-4">
+                                        <div class="grid grid-cols-1 grid-cols-2 gap-4">
                                             { for p.telecom.as_ref().unwrap().iter().map(|contact| {
                                                 html! {
                                                     <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
@@ -320,8 +325,7 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                         }
 
                         // Encounters Card
-                        <shady_minions::ui::Card class="border-muted/30 shadow-lg">
-                            <div class="p-6">
+                        <shady_minions::ui::Card class="!border-0 !shadow-none">
                                 <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
                                     <crate::components::Stethoscope class="size-6 text-primary" />
                                     {"Citas del Paciente"}
@@ -344,121 +348,10 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                                 } else {
                                     <div class="space-y-3">
                                         { for sorted_encounters.iter().map(|encounter| {
-                                            let encounter_id = encounter.id.clone().unwrap_or_default();
-                                            let onclick = {
-                                                let encounter_id = encounter_id.clone();
-                                                let navigator = navigator.clone();
-                                                Callback::from(move |_| {
-                                                    navigator.push(&crate::router::Route::EncounterDetail { id: encounter_id.clone() });
-                                                })
-                                            };
-
-                                            let date_display = encounter.period.as_ref().and_then(|period| period.start)
-                                                .map(|start| {
-                                                    let weekday = match start.weekday() {
-                                                        chrono::Weekday::Mon => "Lun",
-                                                        chrono::Weekday::Tue => "Mar", 
-                                                        chrono::Weekday::Wed => "Mié",
-                                                        chrono::Weekday::Thu => "Jue",
-                                                        chrono::Weekday::Fri => "Vie",
-                                                        chrono::Weekday::Sat => "Sáb",
-                                                        chrono::Weekday::Sun => "Dom",
-                                                    };
-                                                    let date = start.format("%d/%m/%Y").to_string();
-                                                    let time = start.format("%H:%M").to_string();
-                                                    format!("{}, {} - {}", weekday, date, time)
-                                                })
-                                                .unwrap_or_else(|| "-".to_string());
-
-                                            let encounter_type = match &encounter.class {
-                                                EncounterClass::Ambulatory => "Consulta Ambulatoria",
-                                                EncounterClass::Emergency => "Emergencia",
-                                                EncounterClass::HomeHealth => "Visita a Domicilio",
-                                                EncounterClass::Virtual => "Consulta Virtual",
-                                                EncounterClass::Field => "Terreno",
-                                                EncounterClass::Inpatient => "Hospitalización",
-                                                EncounterClass::Acute => "Atención Aguda",
-                                            };
-
-                                            html! {
-                                                <div
-                                                    key={encounter_id.clone()}
-                                                    onclick={onclick}
-                                                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border border-muted/30 shadow-lg hover:border-l-4 hover:border-primary border-l-transparent"
-                                                >
-                                                    <div class="flex items-center gap-4 flex-1 min-w-0">
-                                                        <div class="text-2xl font-bold text-primary">
-                                                            {encounter.period.as_ref().and_then(|p| p.start)
-                                                                .map(|s| s.format("%d").to_string())
-                                                                .unwrap_or_else(|| "-".to_string())}
-                                                        </div>
-                                                        <div class="flex flex-col min-w-0">
-                                                            <p class="font-semibold text-foreground truncate">
-                                                                {encounter_type}
-                                                            </p>
-                                                            <p class="text-sm text-muted">
-                                                                {date_display}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        {match &encounter.status {
-                                                            EncounterStatus::Planned => html! {
-                                                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs font-medium">
-                                                                    <crate::components::Calendar class="size-3" />
-                                                                    {"Planificada"}
-                                                                </span>
-                                                            },
-                                                            EncounterStatus::Finished => html! {
-                                                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium">
-                                                                    <crate::components::Check class="size-3" />
-                                                                    {"Finalizada"}
-                                                                </span>
-                                                            },
-                                                            EncounterStatus::Cancelled => html! {
-                                                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 rounded-md text-xs font-medium">
-                                                                    <crate::components::X class="size-3" />
-                                                                    {"Cancelada"}
-                                                                </span>
-                                                            },
-                                                            EncounterStatus::Arrived => html! {
-                                                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-md text-xs font-medium">
-                                                                    {"Llegó"}
-                                                                </span>
-                                                            },
-                                                            EncounterStatus::InProgress => html! {
-                                                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 rounded-md text-xs font-medium">
-                                                                    {"En Progreso"}
-                                                                </span>
-                                                            },
-                                                            EncounterStatus::Triaged => html! {
-                                                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-800 rounded-md text-xs font-medium">
-                                                                    {"Triaje"}
-                                                                </span>
-                                                            },
-                                                            EncounterStatus::Onleave => html! {
-                                                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-xs font-medium">
-                                                                    {"Ausente"}
-                                                                </span>
-                                                            },
-                                                            EncounterStatus::EnteredInError => html! {
-                                                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 rounded-md text-xs font-medium">
-                                                                    {"Error"}
-                                                                </span>
-                                                            },
-                                                            EncounterStatus::Unknown => html! {
-                                                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-xs font-medium">
-                                                                    {"Desconocido"}
-                                                                </span>
-                                                            },
-                                                        }}
-                                                    </div>
-                                                </div>
-                                            }
+                                            html! { <EncounterPreviewCard encounter={encounter.clone()} /> }
                                         }) }
                                     </div>
                                 }
-                            </div>
                         </shady_minions::ui::Card>
                     </div>
                 }
@@ -466,3 +359,104 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
         </div>
     }
 }
+
+#[derive(Properties, PartialEq)]
+struct EncounterPreviewProps {
+    pub encounter: Encounter,
+}
+
+#[function_component(EncounterPreviewCard)]
+fn encounter_preview_card(props: &EncounterPreviewProps) -> Html {
+    let EncounterPreviewProps { encounter } = props;
+    let Some(date) = encounter.period.as_ref().and_then(|p| p.start) else {
+        return html! {};
+    };
+    let Some(encounter_id) = encounter.id.clone() else {
+        return html! {};
+    };
+    html! {
+        <yew_router::components::Link::<crate::router::Route>
+            to={crate::router::AppRoute::EncounterDetail { id: encounter_id }}
+            classes={classes!("flex", "flex-col", "sm:flex-row", "sm:items-center", "justify-between", "gap-4", "p-4", "bg-gray-50", "rounded-lg", "hover:bg-gray-100", "transition-colors", "cursor-pointer", "border", "border-muted/30", "shadow-lg", "hover:border-l-4", "hover:border-primary")}
+        >
+            <div class="flex items-center gap-4 flex-1 min-w-0">
+                <div class="text-2xl font-bold text-primary">
+                    {
+                        encounter.period.as_ref().and_then(|p| p.start)
+                        .map_or_else(
+                            || "-".to_string(),
+                            |s| s.format("%d").to_string())
+                    }
+                </div>
+                <div class="flex flex-col min-w-0">
+                    <p class="font-semibold text-foreground truncate">
+                        {match &encounter.class {
+                            EncounterClass::Ambulatory => "Consulta Ambulatoria",
+                            EncounterClass::Emergency => "Emergencia",
+                            EncounterClass::HomeHealth => "Domiciliar",
+                            EncounterClass::Virtual => "Virtual",
+                            EncounterClass::Field => "De Campo",
+                            EncounterClass::Inpatient => "Hospitalización",
+                            EncounterClass::Acute => "Atención Aguda",
+                        }}
+                    </p>
+                    <p class="text-sm text-muted">
+                        {date.format("%d/%m/%Y").to_string()}
+                    </p>
+                </div>
+            </div>
+            <div>
+                {match &encounter.status {
+                    EncounterStatus::Planned => html! {
+                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs font-medium">
+                            <crate::components::Calendar class="size-3" />
+                            {"Planificada"}
+                        </span>
+                    },
+                    EncounterStatus::Finished => html! {
+                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium">
+                            <crate::components::Check class="size-3" />
+                            {"Finalizada"}
+                        </span>
+                    },
+                    EncounterStatus::Cancelled => html! {
+                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 rounded-md text-xs font-medium">
+                            <crate::components::X class="size-3" />
+                            {"Cancelada"}
+                        </span>
+                    },
+                    EncounterStatus::Arrived => html! {
+                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-md text-xs font-medium">
+                            {"Llegó"}
+                        </span>
+                    },
+                    EncounterStatus::InProgress => html! {
+                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 rounded-md text-xs font-medium">                            {"En Progreso"}
+                        </span>
+                    },
+                    EncounterStatus::Triaged => html! {
+                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-800 rounded-md text-xs font-medium">
+                            {"Triaje"}
+                        </span>
+                    },
+                    EncounterStatus::Onleave => html! {
+                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-xs font-medium">
+                            {"Ausente"}
+                        </span>
+                    },
+                    EncounterStatus::EnteredInError => html! {
+                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 rounded-md text-xs font-medium">
+                            {"Error"}
+                        </span>
+                    },
+                    EncounterStatus::Unknown => html! {
+                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-xs font-medium">
+                            {"Desconocido"}
+                        </span>
+                    },
+                }}
+            </div>
+        </yew_router::components::Link::<crate::router::Route>>
+    }
+}
+
