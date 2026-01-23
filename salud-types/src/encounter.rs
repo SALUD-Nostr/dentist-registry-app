@@ -47,7 +47,7 @@ pub struct Encounter {
 }
 
 /// Current state of the encounter
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Copy)]
 #[serde(rename_all = "kebab-case")]
 pub enum EncounterStatus {
     Planned,

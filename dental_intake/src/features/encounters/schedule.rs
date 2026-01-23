@@ -30,7 +30,7 @@ pub fn encounters_schedule() -> Html {
         let is_loading = is_loading.clone();
 
         Callback::from(move |cal: yew_full_calendar::Calendar| {
-            calendar_state.borrow_mut().replace(cal.clone());
+            calendar_state.borrow_mut().replace(cal);
 
             if let Err(e) = load_encounters(
                 calendar_state.clone(),
@@ -99,7 +99,7 @@ pub fn encounters_schedule() -> Html {
                     </button>
                 </div>
 
-                <shady_minions::ui::Card class="flex-1 !p-0 !max-w-none">
+                <shady_minions::ui::Card class="flex-1 !p-0 !max-w-none !border-0 shadow-lg ">
                     <style>
                         {r"
                         .fc-header-toolbar {

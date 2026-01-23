@@ -24,22 +24,20 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
 
     let encounter = use_state(|| None::<Encounter>);
     let patient = use_state(|| None::<Patient>);
-    let clinical_impressions = use_state(|| Vec::<ClinicalImpression>::new());
+    let clinical_impressions = use_state(Vec::<ClinicalImpression>::new);
     let is_loading = use_state(|| true);
     let is_loading_impressions = use_state(|| true);
     let error = use_state(|| None::<String>);
 
     // Load encounter and patient on mount
     {
-        let encounter_id = props.encounter_id.clone();
         let encounter = encounter.clone();
         let patient = patient.clone();
         let is_loading = is_loading.clone();
         let error = error.clone();
         let encounter_store = encounter_store.clone();
-        let patient_store = patient_store.clone();
 
-        use_effect_with(encounter_id.clone(), move |id| {
+        use_effect_with(props.encounter_id.clone(), move |id| {
             let id = id.clone();
             spawn_local(async move {
                 log!("Loading encounter:", id.as_str());
@@ -75,7 +73,7 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                     }
                     Err(e) => {
                         log!("Error loading encounter:", format!("{:?}", e));
-                        error.set(Some(format!("Error al cargar la cita: {:?}", e)));
+                        error.set(Some(format!("Error al cargar la cita: {e:?}",)));
                         is_loading.set(false);
                     }
                 }
@@ -122,7 +120,6 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
     };
 
     let handle_new_impression = {
-        let navigator = navigator.clone();
         let encounter_id = props.encounter_id.clone();
         Callback::from(move |_| {
             navigator.push(&crate::router::Route::ClinicalImpressionNew {
@@ -142,7 +139,7 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
             let encounter_id = encounter_id.clone();
 
             spawn_local(async move {
-                if let Some(mut enc) = (*encounter).as_ref().cloned() {
+                if let Some(mut enc) = (*encounter).clone() {
                     enc.status = EncounterStatus::Finished;
 
                     match encounter_store.save(&enc).await {
@@ -165,7 +162,6 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
 
     let handle_mark_cancelled = {
         let encounter = encounter.clone();
-        let encounter_store = encounter_store.clone();
         let encounter_id = props.encounter_id.clone();
 
         Callback::from(move |_| {
@@ -174,11 +170,11 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
             let encounter_id = encounter_id.clone();
 
             spawn_local(async move {
-                if let Some(mut enc) = (*encounter).as_ref().cloned() {
+                if let Some(mut enc) = (*encounter).clone() {
                     enc.status = EncounterStatus::Cancelled;
 
                     match encounter_store.save(&enc).await {
-                        Ok(_) => {
+                        Ok(()) => {
                             log!("Encounter marked as cancelled");
                             // Reload the encounter
                             if let Ok(Some(updated_enc)) = encounter_store.get(&encounter_id).await
@@ -248,7 +244,7 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                 } else if let Some(enc) = (*encounter).as_ref() {
                     <div class="grid gap-4">
                         // Encounter Information Card
-                        <shady_minions::ui::Card class="border-muted/30 shadow-lg">
+                        <shady_minions::ui::Card class="!border-0 !shadow-none">
                             <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
                                 <crate::components::Stethoscope class="size-5 text-primary" />
                                 {"Información de la Cita"}
@@ -277,60 +273,7 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                                     <label class="block text-sm font-medium text-muted mb-1">
                                         {"Estado"}
                                     </label>
-                                    <p class="text-base">
-                                        {
-                                            match &enc.status {
-                                                EncounterStatus::Planned => html! {
-                                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
-                                                        <crate::components::Calendar class="size-4" />
-                                                        {"Planificada"}
-                                                    </span>
-                                                },
-                                                EncounterStatus::Arrived => html! {
-                                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-md text-sm font-medium">
-                                                        {"Llegó"}
-                                                    </span>
-                                                },
-                                                EncounterStatus::Triaged => html! {
-                                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-800 rounded-md text-sm font-medium">
-                                                        {"Triaje"}
-                                                    </span>
-                                                },
-                                                EncounterStatus::InProgress => html! {
-                                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 rounded-md text-sm font-medium">
-                                                        {"En Progreso"}
-                                                    </span>
-                                                },
-                                                EncounterStatus::Onleave => html! {
-                                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-sm font-medium">
-                                                        {"Ausente"}
-                                                    </span>
-                                                },
-                                                EncounterStatus::Finished => html! {
-                                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md text-sm font-medium">
-                                                        <crate::components::Check class="size-4" />
-                                                        {"Finalizada"}
-                                                    </span>
-                                                },
-                                                EncounterStatus::Cancelled => html! {
-                                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 rounded-md text-sm font-medium">
-                                                        <crate::components::X class="size-4" />
-                                                        {"Cancelada"}
-                                                    </span>
-                                                },
-                                                EncounterStatus::EnteredInError => html! {
-                                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 rounded-md text-sm font-medium">
-                                                        {"Error"}
-                                                    </span>
-                                                },
-                                                EncounterStatus::Unknown => html! {
-                                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-sm font-medium">
-                                                        {"Desconocido"}
-                                                    </span>
-                                                },
-                                            }
-                                        }
-                                    </p>
+                                    <EncounterStatusBadge status={enc.status} />
                                 </div>
 
                                 // Class/Type
@@ -354,54 +297,53 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                                 </div>
 
                                 // Date and Time
-                                if let Some(period) = &enc.period {
-                                    if let Some(start) = period.start {
-                                        <div>
-                                            <label class="block text-sm font-medium text-muted mb-1">
-                                                {"Fecha"}
-                                            </label>
-                                            <p class="text-base text-foreground">
-                                                {start.format("%d/%m/%Y").to_string()}
-                                            </p>
-                                        </div>
+                                if let Some(period) = &enc.period
+                                    && let Some(start) = period.start {
+                                    <div>
+                                        <label class="block text-sm font-medium text-muted mb-1">
+                                            {"Fecha"}
+                                        </label>
+                                        <p class="text-base text-foreground">
+                                            {start.format("%d/%m/%Y").to_string()}
+                                        </p>
+                                    </div>
 
-                                        <div>
-                                            <label class="block text-sm font-medium text-muted mb-1">
-                                                {"Hora"}
-                                            </label>
-                                            <p class="text-base text-foreground">
-                                                {format!("{:02}:{:02}", start.hour(), start.minute())}
-                                            </p>
-                                        </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-muted mb-1">
+                                            {"Hora"}
+                                        </label>
+                                        <p class="text-base text-foreground">
+                                            {format!("{:02}:{:02}", start.hour(), start.minute())}
+                                        </p>
+                                    </div>
 
-                                        // Duration
-                                        {
-                                            period.end.map(|end| {
-                                                let duration = end.signed_duration_since(start);
-                                                let minutes = duration.num_minutes();
-                                                let duration_str = if minutes >= 60 {
-                                                    let hours = minutes / 60;
-                                                    let mins = minutes % 60;
-                                                    if mins > 0 {
-                                                        format!("{} hora(s) {} min", hours, mins)
-                                                    } else {
-                                                        format!("{} hora(s)", hours)
-                                                    }
+                                    // Duration
+                                    {
+                                        period.end.map(|end| {
+                                            let duration = end.signed_duration_since(start);
+                                            let minutes = duration.num_minutes();
+                                            let duration_str = if minutes >= 60 {
+                                                let hours = minutes / 60;
+                                                let mins = minutes % 60;
+                                                if mins > 0 {
+                                                    format!("{} hora(s) {} min", hours, mins)
                                                 } else {
-                                                    format!("{} minutos", minutes)
-                                                };
-                                                html! {
-                                                    <div>
-                                                        <label class="block text-sm font-medium text-muted mb-1">
-                                                            {"Duración"}
-                                                        </label>
-                                                        <p class="text-base text-foreground">
-                                                            {duration_str}
-                                                        </p>
-                                                    </div>
+                                                    format!("{} hora(s)", hours)
                                                 }
-                                            })
-                                        }
+                                            } else {
+                                                format!("{} minutos", minutes)
+                                            };
+                                            html! {
+                                                <div>
+                                                    <label class="block text-sm font-medium text-muted mb-1">
+                                                        {"Duración"}
+                                                    </label>
+                                                    <p class="text-base text-foreground">
+                                                        {duration_str}
+                                                    </p>
+                                                </div>
+                                            }
+                                        })
                                     }
                                 }
 
@@ -454,7 +396,7 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                         }
 
                         // Clinical Impressions Card
-                        <shady_minions::ui::Card class="border-muted/30 shadow-lg">
+                        <shady_minions::ui::Card class="!border-0 !shadow-none">
                             <div class="flex justify-between items-center mb-3">
                                 <h2 class="text-lg font-semibold">{"Impresiones Clínicas"}</h2>
                                 <button
@@ -576,5 +518,42 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                 }
             </div>
         </div>
+    }
+}
+
+#[derive(Properties, PartialEq)]
+struct EncounterStatusBadgeProps {
+    pub status: EncounterStatus,
+}
+
+#[function_component(EncounterStatusBadge)]
+fn encounter_status_badge(props: &EncounterStatusBadgeProps) -> Html {
+    let class = match props.status {
+        EncounterStatus::Planned => "bg-blue-100 text-blue-800",
+        EncounterStatus::Arrived => "bg-yellow-100 text-yellow-800",
+        EncounterStatus::Triaged => "bg-orange-100 text-orange-800",
+        EncounterStatus::InProgress => "bg-purple-100 text-purple-800",
+        EncounterStatus::Finished => "bg-green-100 text-green-800",
+        EncounterStatus::Cancelled | EncounterStatus::EnteredInError => "bg-red-100 text-red-800",
+        EncounterStatus::Onleave | EncounterStatus::Unknown => "bg-gray-100 text-gray-800",
+    };
+
+    let inner_text = match props.status {
+        EncounterStatus::Planned => "Planificada",
+        EncounterStatus::Arrived => "Llegó",
+        EncounterStatus::Triaged => "Triaje",
+        EncounterStatus::InProgress => "En Progreso",
+        EncounterStatus::Onleave => "Ausente",
+        EncounterStatus::Finished => "Finalizada",
+        EncounterStatus::Cancelled => "Cancelada",
+        EncounterStatus::EnteredInError => "Error",
+        EncounterStatus::Unknown => "Desconocido",
+    };
+
+    html! {
+        <span class={classes!(class, "inline-flex",  "items-center", "gap-1", "px-2", "py-1", "rounded-md", "text-xs", "font-medium")}>
+            <crate::components::Calendar class="size-4" />
+            {inner_text}
+        </span>
     }
 }
