@@ -557,60 +557,71 @@ fn clinical_impression_card(props: &ClinicalImpressionProps) -> Html {
     let Some(date) = impression.date else {
         return html! {};
     };
+    // Determine border color based on status
+    let status_border_color = match impression.status {
+        salud_types::ClinicalImpressionStatus::Completed => "border-l-green-500",
+        salud_types::ClinicalImpressionStatus::InProgress => "border-l-blue-500",
+        salud_types::ClinicalImpressionStatus::EnteredInError => "border-l-red-500",
+    };
+
     html! {
-        <div class="border border-muted/30 rounded-lg p-3 hover:bg-gray-50 transition-colors shadow-lg">
-            <div class="flex justify-between items-start mb-3">
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-2">
-                        <ClinicalImpressionStatusBadge status={impression.status} />
-                        <MutedText class="text-xs">
-                            {date.format("%d/%m/%Y %H:%M").to_string()}
-                        </MutedText>
-                    </div>
+        <div class={classes!(
+            "relative",
+            "border",
+            "border-muted/20",
+            "border-l-4",
+            status_border_color,
+            "rounded-lg",
+            "p-3",
+            "bg-white",
+            "hover:shadow-lg",
+            "transition-all",
+            "duration-200",
+            "shadow-sm"
+        )}>
+            // Compact header
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <ClinicalImpressionStatusBadge status={impression.status} />
+                <div class="flex items-center gap-1">
+                    <crate::components::Calendar class="size-3 text-muted" />
+                    <MutedText class="text-xs">
+                        {date.format("%d/%m/%y %H:%M").to_string()}
+                    </MutedText>
                 </div>
             </div>
 
-            // Summary
+            // Summary - main content
             if let Some(summary) = &impression.summary {
-                <div class="mb-3">
-                    <Subtitle class="text-sm font-semibold text-foreground mb-1">{"Resumen"}</Subtitle>
-                    <NormalText class="text-sm whitespace-pre-wrap">{summary.clone()}</NormalText>
+                <div class="mb-2">
+                    <NormalText class="text-sm text-foreground whitespace-pre-wrap">
+                        {summary.clone()}
+                    </NormalText>
                 </div>
             }
 
-            // Findings
+            // Findings - compact list
             if let Some(findings) = &impression.finding && !findings.is_empty() {
-                <div class="mb-3">
-                    <Subtitle class="text-sm font-semibold text-foreground mb-2">{"Hallazgos y Diagnósticos"}</Subtitle>
-                    <ul class="space-y-1">
-
-                        { for findings.iter().map(|finding| {
-                            finding.item_codeable_concept.as_ref().map_or_else(|| html! {}, |item| {
-                                html! {
-                                    <li class="text-sm text-foreground flex items-start gap-2">
-                                        <span class="text-primary mt-1">{"•"}</span>
-                                        <span>{&item.text}</span>
-                                    </li>
-                                }
-                            })
-                        }) }
-                    </ul>
-                </div>
+                <ul class="mb-2 space-y-1">
+                    { for findings.iter().map(|finding| {
+                        finding.item_codeable_concept.as_ref().map_or_else(|| html! {}, |item| {
+                            html! {
+                                <li class="text-sm text-muted flex items-start gap-1.5">
+                                    <span class="text-primary font-bold mt-0.5">{"•"}</span>
+                                    <span class="flex-1">{&item.text}</span>
+                                </li>
+                            }
+                        })
+                    }) }
+                </ul>
             }
 
-            // Notes
+            // Notes - inline if present
             if let Some(notes) = &impression.note && !notes.is_empty() {
-                <div>
-                    <Subtitle class="text-sm font-semibold text-foreground mb-2">{"Notas"}</Subtitle>
+                <div class="border-t border-muted/10 pt-2 mt-2 space-y-1.5">
                     { for notes.iter().map(|note| {
                         html! {
-                            <div class="text-sm text-muted bg-gray-50 p-2 rounded">
-                                                        <NormalText class="whitespace pre-wrap">{note.text.clone()}</NormalText>
-                                if let Some(time) = note.time {
-                                    <MutedText class="text-xs mt-1">
-                                        {time.format("%d/%m/%Y %H:%M").to_string()}
-                                    </MutedText>
-                                }
+                            <div class="text-xs text-muted italic">
+                                {note.text.clone()}
                             </div>
                         }
                     }) }
