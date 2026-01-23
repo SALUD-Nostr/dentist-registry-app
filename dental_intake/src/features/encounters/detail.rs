@@ -262,33 +262,14 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                 } else  {
                     <div class="grid gap-4">
                         // Encounter Information
-                        <EncounterDetailCard encounter={encounter.clone()} patient={patient.clone()} />
+                        <EncounterDetailCard 
+                            encounter={encounter.clone()} 
+                            patient={patient.clone()} 
+                            on_mark_cancelled={handle_mark_cancelled.clone()}
+                            on_mark_completed={handle_mark_completed.clone()}
+                        />
 
-                        // Action Buttons
-                        {
-                            if encounter.status != EncounterStatus::Finished && encounter.status != EncounterStatus::Cancelled {
-                                html! {
-                                    <div class="flex gap-3 justify-end">
-                                        <button
-                                            onclick={handle_mark_cancelled.clone()}
-                                            class="px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2"
-                                        >
-                                            <crate::components::X class="size-5" />
-                                            {"Marcar como Cancelada"}
-                                        </button>
-                                        <button
-                                            onclick={handle_mark_completed.clone()}
-                                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-                                        >
-                                            <crate::components::Check class="size-5" />
-                                            {"Marcar como Completada"}
-                                        </button>
-                                    </div>
-                                }
-                            } else {
-                                html! {}
-                            }
-                        }
+                        
 
                         // Clinical Impressions Card
                         <shady_minions::ui::Card class="!border-0 !shadow-none">
@@ -315,7 +296,7 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                                     <p class="text-sm text-muted mt-2">{"Haz clic en 'Agregar' para crear la primera impresión"}</p>
                                 </div>
                             } else {
-                                <div class="space-y-4">
+                                <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                                     { for (*clinical_impressions).iter().map(|impression| {
                                         html! { <ClinicalImpressionCard impression={impression.clone()} /> }
                                     }) }
@@ -370,11 +351,15 @@ fn encounter_status_badge(props: &EncounterStatusBadgeProps) -> Html {
 struct EncounterDetailCardProps {
     pub encounter: Encounter,
     pub patient: Patient,
+    #[prop_or_default]
+    pub on_mark_cancelled: Callback<()>,
+    #[prop_or_default]
+    pub on_mark_completed: Callback<()>,
 }
 
 #[function_component(EncounterDetailCard)]
 fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
-    let EncounterDetailCardProps { encounter, patient } = props;
+    let EncounterDetailCardProps { encounter, patient, on_mark_cancelled, on_mark_completed } = props;
     let Some(period) = encounter.period.as_ref() else {
         return html! {};
     };
@@ -383,10 +368,34 @@ fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
     };
     html! {
         <shady_minions::ui::Card class="!border-0 !shadow-none">
-            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                <crate::components::Stethoscope class="size-5 text-primary" />
-                {"Información de la Cita"}
-            </h2>
+            <div class="flex justify-between items-start mb-4">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <crate::components::Stethoscope class="size-5 text-primary" />
+                    {"Información de la Cita"}
+                </h2>
+                {if encounter.status != EncounterStatus::Finished && encounter.status != EncounterStatus::Cancelled {
+                    html! {
+                        <div class="flex gap-2">
+                            <button
+                                class="px-3 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2 text-sm"
+                                onclick={props.on_mark_cancelled.clone()}
+                            >
+                                <crate::components::X class="size-4" />
+                                {"Cancelar"}
+                            </button>
+                            <button
+                                class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm"
+                                onclick={props.on_mark_completed.clone()}
+                            >
+                                <crate::components::Check class="size-4" />
+                                {"Completar"}
+                            </button>
+                        </div>
+                    }
+                } else {
+                    html! {}
+                }}
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 // Patient
                 <div>
@@ -539,7 +548,7 @@ fn clinical_impression_card(props: &ClinicalImpressionProps) -> Html {
         return html! {};
     };
     html! {
-        <div class="border border-muted/30 rounded-lg p-4 hover:bg-gray-50 transition-colors shadow-md">
+        <div class="border border-muted/30 rounded-lg p-3 hover:bg-gray-50 transition-colors shadow-lg">
             <div class="flex justify-between items-start mb-3">
                 <div class="flex-1">
                     <div class="flex items-center gap-2 mb-2">
