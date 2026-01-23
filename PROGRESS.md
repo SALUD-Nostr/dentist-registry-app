@@ -1,7 +1,48 @@
 # Progress Update - Salud Dental
 
-**Last Updated:** 2026-01-21
-**Status:** App skeleton completed - compiles successfully with placeholder screens
+**Last Updated:** 2026-01-22
+**Status:** Core features implemented and functional
+
+---
+
+## ✅ Completed Features (All features below are 100% complete)
+
+### Patient Management (Complete)
+- ✅ Patient registration form with FHIR R4 compliance
+- ✅ Patient list view with IndexedDB integration and real-time search
+- ✅ Patient detail view with full information display
+
+### Encounter Management (Complete)
+- ✅ Encounter scheduling form with multi-step workflow (patient search, date/time, confirmation)
+- ✅ Encounter calendar view with yew-full-calendar integration
+- ✅ Encounter detail view with patient information
+- ✅ Encounter status management (mark as completed/cancelled)
+- ✅ **Encounter history list** with pagination and search
+  - Search by patient name and ID
+  - Pagination (10 encounters per page)
+  - Sort by date descending (most recent first)
+  - Filter to show non-planned encounters (finished, cancelled, etc.)
+  - Loading state with skeleton loader (legacy pattern)
+  - Empty state (no encounters in history)
+  - No search results state
+  - Error state with error message
+  - Encounter row display with patient name, date, status, type
+  - Status badges with icons for all statuses
+  - Total count display
+  - Pagination controls (Previous/Next)
+  - Page indicator (Page X of Y)
+  - Click row to navigate to encounter detail
+
+### Clinical Impressions (Complete)
+- ✅ Clinical impression form with dynamic findings
+- ✅ Clinical impressions list in encounter detail view
+
+### Storage Layer (Complete)
+- ✅ IndexedDB storage layer for FHIR resources
+- ✅ PatientStore with CRUD operations
+- ✅ EncounterStore with CRUD operations
+- ✅ ClinicalImpressionStore with CRUD operations
+- ✅ Unified error handling (AppError enum)
 
 ---
 
