@@ -12,8 +12,14 @@ mod patient_store;
 pub use clinical_impression_store::{
     ClinicalImpressionStoreProvider, use_clinical_impression_store,
 };
-pub use encounter_store::{EncounterStore, EncounterStoreProvider, use_encounter_store};
-pub use patient_store::{PatientStore, PatientStoreProvider, use_patient_store};
+pub use encounter_store::{
+    EncounterStore, EncounterStoreProvider, use_encounter_store, use_encounter_store_version,
+    use_notify_encounters_changed,
+};
+pub use patient_store::{
+    PatientStore, PatientStoreProvider, use_patient_store, use_patient_store_version,
+    use_notify_patients_changed,
+};
 
 /// Database name for all FHIR resources
 pub const DB_NAME: &str = "salud-dental-db";

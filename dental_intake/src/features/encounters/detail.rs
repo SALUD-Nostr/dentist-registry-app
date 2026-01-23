@@ -10,6 +10,8 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::components::typography::{Title, Subtitle, Label, MutedText, NormalText};
+
 #[derive(Properties, PartialEq, Eq)]
 pub struct EncounterDetailProps {
     pub encounter_id: String,
@@ -231,17 +233,17 @@ let handle_mark_cancelled = {
                         <crate::components::ArrowLeft class="size-4" />
                         {"Volver al Historial"}
                     </button>
-                    <h1 class="text-2xl font-bold">
+                    <Title>
                         {"Detalles de la Cita"}
-                    </h1>
-                    <p class="text-xs text-muted">{"ID: "}{encounter.id.as_ref().unwrap_or(&props.encounter_id)}</p>
+                    </Title>
+                    <MutedText class="text-xs">{"ID: "}{encounter.id.as_ref().unwrap_or(&props.encounter_id)}</MutedText>
                 </div>
 
                 if *is_loading {
                     <div class="flex items-center justify-center py-8">
                         <div class="flex flex-col items-center gap-4">
                             <div class="size-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                            <p class="text-muted">{"Cargando información de la cita..."}</p>
+                            <MutedText>{"Cargando información de la cita..."}</MutedText>
                         </div>
                     </div>
                 } else if let Some(err) = (*error).as_ref() {
@@ -272,7 +274,7 @@ let handle_mark_cancelled = {
                         // Clinical Impressions Card
                         <shady_minions::ui::Card class="!border-0 !shadow-none">
                             <div class="flex justify-between items-center mb-3">
-                                <crate::components::Subtitle>{"Impresiones Clínicas"}</crate::components::Subtitle>
+                                <Subtitle>{"Impresiones Clínicas"}</Subtitle>
                                 {if encounter.status != EncounterStatus::Finished && encounter.status != EncounterStatus::Cancelled {
                                     html! {
                                         <button
@@ -291,16 +293,16 @@ let handle_mark_cancelled = {
                             if *is_loading_impressions {
                                 <div class="text-center py-8">
                                     <div class="size-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-                                    <p class="text-muted mt-4">{"Cargando impresiones clínicas..."}</p>
+                                    <MutedText class="mt-4">{"Cargando impresiones clínicas..."}</MutedText>
                                 </div>
                             } else if (*clinical_impressions).is_empty() {
                                 <div class="text-center py-8">
                                     <crate::components::Clipboard class="size-16 mx-auto mb-4 opacity-50 text-muted" />
-                                    <p class="text-muted">{"No hay impresiones clínicas registradas"}</p>
+                                    <MutedText>{"No hay impresiones clínicas registradas"}</MutedText>
                                     {
                                     if encounter.status != EncounterStatus::Finished && encounter.status != EncounterStatus::Cancelled {
                                         html! {
-                                            <p class="text-sm text-muted mt-2">{"Haz clic en 'Agregar' para crear la primera impresión"}</p>
+                                            <MutedText class="mt-2">{"Haz clic en 'Agregar' para crear la primera impresión"}</MutedText>
                                         }
                                     } else {
                                         html! {}
@@ -381,10 +383,10 @@ fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
     html! {
         <shady_minions::ui::Card class="!border-0 !shadow-none">
             <div class="flex justify-between items-start mb-4 flex-col md:flex-row gap-2">
-                <crate::components::Subtitle class="flex items-center gap-2">
+                <Subtitle class="flex items-center gap-2">
                     <crate::components::Stethoscope class="size-5 text-primary" />
                     {"Información de la Cita"}
-                </crate::components::Subtitle>
+                </Subtitle>
                 {if encounter.status != EncounterStatus::Finished && encounter.status != EncounterStatus::Cancelled {
                     html! {
                         <div class="flex gap-2">
@@ -408,29 +410,29 @@ fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
                     html! {}
                 }}
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                 // Patient
                 <div>
-                    <crate::components::Label>{"Paciente"}</crate::components::Label>
-                    <p class="text-base font-medium text-foreground">
+                    <Label>{"Paciente"}</Label>
+                    <NormalText class="font-medium">
                         {
                             patient.full_name().unwrap_or_else(|| "Paciente".to_string())
                         }
-                    </p>
+                    </NormalText>
                 </div>
 
                 // Status
                 <div>
-                    <crate::components::Label>{"Estado"}</crate::components::Label>
+                    <Label>{"Estado"}</Label>
                     <EncounterStatusBadge status={encounter.status} />
                 </div>
 
                 // Class/Type
                 <div>
-                    <label class="block text-sm font-medium text-muted mb-1">
+                    <Label>
                         {"Tipo de Consulta"}
-                    </label>
-                    <p class="text-base text-foreground">
+                    </Label>
+                    <NormalText>
                         {
                             match &encounter.class {
                                 EncounterClass::Ambulatory => "Ambulatoria",
@@ -442,26 +444,26 @@ fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
                                 EncounterClass::Acute => "Atención Aguda",
                             }
                         }
-                    </p>
+                    </NormalText>
                 </div>
 
                 // Date and Time
                 <div>
-                    <label class="block text-sm font-medium text-muted mb-1">
+                    <Label>
                         {"Fecha"}
-                    </label>
-                    <p class="text-base text-foreground">
+                    </Label>
+                    <NormalText>
                         {start.format("%d/%m/%Y").to_string()}
-                    </p>
+                    </NormalText>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-muted mb-1">
+                    <Label>
                         {"Hora"}
-                    </label>
-                    <p class="text-base text-foreground">
+                    </Label>
+                    <NormalText>
                         {format!("{:02}:{:02}", start.hour(), start.minute())}
-                    </p>
+                    </NormalText>
                 </div>
 
                 // Duration
@@ -482,12 +484,12 @@ fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
                         };
                         html! {
                             <div>
-                                <label class="block text-sm font-medium text-muted mb-1">
+                                <Label>
                                     {"Duración"}
-                                </label>
-                                <p class="text-base text-foreground">
+                                </Label>
+                                <NormalText>
                                     {duration_str}
-                                </p>
+                                </NormalText>
                             </div>
                         }
                     })
@@ -497,15 +499,15 @@ fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
                 if let Some(reason_codes) = &encounter.reason_code {
                     if !reason_codes.is_empty() {
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-muted mb-1">
+                            <Label>
                                 {"Motivo de Consulta"}
-                            </label>
+                            </Label>
                             <div class="space-y-2">
                                 { for reason_codes.iter().map(|reason| {
                                     html! {
-                                        <p class="text-base text-foreground bg-gray-50 p-3 rounded-lg">
-                                            {&reason.text}
-                                        </p>
+                                        <NormalText class="bg-gray-50 p-3 rounded-lg">
+                                            {reason.text.clone()}
+                                        </NormalText>
                                     }
                                 }) }
                             </div>
@@ -561,9 +563,9 @@ fn clinical_impression_card(props: &ClinicalImpressionProps) -> Html {
                 <div class="flex-1">
                     <div class="flex items-center gap-2 mb-2">
                         <ClinicalImpressionStatusBadge status={impression.status} />
-                        <span class="text-xs text-muted">
+                        <MutedText class="text-xs">
                             {date.format("%d/%m/%Y %H:%M").to_string()}
-                        </span>
+                        </MutedText>
                     </div>
                 </div>
             </div>
@@ -571,15 +573,15 @@ fn clinical_impression_card(props: &ClinicalImpressionProps) -> Html {
             // Summary
             if let Some(summary) = &impression.summary {
                 <div class="mb-3">
-                    <crate::components::Subtitle class="text-sm font-semibold text-foreground mb-1">{"Resumen"}</crate::components::Subtitle>
-                    <crate::components::NormalText class="text-sm whitespace-pre-wrap">{summary.clone()}</crate::components::NormalText>
+                    <Subtitle class="text-sm font-semibold text-foreground mb-1">{"Resumen"}</Subtitle>
+                    <NormalText class="text-sm whitespace-pre-wrap">{summary.clone()}</NormalText>
                 </div>
             }
 
             // Findings
             if let Some(findings) = &impression.finding && !findings.is_empty() {
                 <div class="mb-3">
-                    <h4 class="text-sm font-semibold text-foreground mb-2">{"Hallazgos y Diagnósticos"}</h4>
+                    <Subtitle class="text-sm font-semibold text-foreground mb-2">{"Hallazgos y Diagnósticos"}</Subtitle>
                     <ul class="space-y-1">
 
                         { for findings.iter().map(|finding| {
@@ -599,15 +601,15 @@ fn clinical_impression_card(props: &ClinicalImpressionProps) -> Html {
             // Notes
             if let Some(notes) = &impression.note && !notes.is_empty() {
                 <div>
-                    <crate::components::Subtitle class="text-sm font-semibold text-foreground mb-2">{"Notas"}</crate::components::Subtitle>
+                    <Subtitle class="text-sm font-semibold text-foreground mb-2">{"Notas"}</Subtitle>
                     { for notes.iter().map(|note| {
                         html! {
                             <div class="text-sm text-muted bg-gray-50 p-2 rounded">
-                                                        <crate::components::NormalText class="whitespace pre-wrap">{note.text.clone()}</crate::components::NormalText>
+                                                        <NormalText class="whitespace pre-wrap">{note.text.clone()}</NormalText>
                                 if let Some(time) = note.time {
-                                    <p class="text-xs text-muted mt-1">
+                                    <MutedText class="text-xs mt-1">
                                         {time.format("%d/%m/%Y %H:%M").to_string()}
-                                    </p>
+                                    </MutedText>
                                 }
                             </div>
                         }

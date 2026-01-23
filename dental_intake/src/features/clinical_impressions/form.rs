@@ -11,6 +11,8 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::components::typography::{Title, Subtitle, MutedText, Label};
+
 #[derive(Properties, PartialEq, Eq)]
 pub struct ClinicalImpressionFormProps {
     pub encounter_id: String,
@@ -253,8 +255,8 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
                         <crate::components::ArrowLeft class="size-5" />
                         {"Volver a la Cita"}
                     </button>
-                    <h1 class="text-3xl font-bold">{"Nueva Impresión Clínica"}</h1>
-                    <p class="text-sm text-muted">{"Cita ID: "}{&props.encounter_id}</p>
+                    <Title>{"Nueva Impresión Clínica"}</Title>
+                    <MutedText>{"Cita ID: "}{&props.encounter_id}</MutedText>
                 </div>
 
                 if !(*errors).is_empty() {
@@ -262,7 +264,7 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
                         <div class="flex items-start gap-2">
                             <crate::components::X class="size-5 text-red-600 mt-0.5" />
                             <div class="flex-1">
-                                <h3 class="font-semibold text-red-800">{"Errores de validación"}</h3>
+                                <Subtitle size="text-sm font-semibold text-red-800">{"Errores de validación"}</Subtitle>
                                 <ul class="mt-2 space-y-1">
                                     { for (*errors).iter().map(|error| html! {
                                         <li class="text-sm text-red-700">{error}</li>
@@ -278,10 +280,10 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
                         <div class="space-y-6">
                             // Summary
                             <div>
-                                <label class="block text-sm font-medium text-foreground mb-2">
+                                <Label class="text-foreground mb-2">
                                     {"Resumen Clínico"}
                                     <span class="text-red-600">{"*"}</span>
-                                </label>
+                                </Label>
                                 <textarea
                                     value={(*summary).clone()}
                                     oninput={on_summary_change}
@@ -290,17 +292,17 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
                                     class="w-full px-3 py-2 border border-muted rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                                     required={true}
                                 />
-                                <p class="mt-1 text-xs text-muted">
+                                <MutedText size="mt-1 text-xs text-muted">
                                     {"Resumen general de la evaluación clínica del paciente"}
-                                </p>
+                                </MutedText>
                             </div>
 
                             // Findings
                             <div>
                                 <div class="flex justify-between items-center mb-2">
-                                    <label class="block text-sm font-medium text-foreground">
+                                    <Label class="text-foreground">
                                         {"Hallazgos y Diagnósticos"}
-                                    </label>
+                                    </Label>
                                     <button
                                         type="button"
                                         onclick={on_add_finding}
@@ -349,16 +351,16 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
                                         }
                                     }) }
                                 </div>
-                                <p class="mt-1 text-xs text-muted">
+                                <MutedText size="mt-1 text-xs text-muted">
                                     {"Hallazgos específicos, diagnósticos o condiciones identificadas"}
-                                </p>
+                                </MutedText>
                             </div>
 
                             // Notes
                             <div>
-                                <label class="block text-sm font-medium text-foreground mb-2">
+                                <Label class="text-foreground mb-2">
                                     {"Notas Adicionales"}
-                                </label>
+                                </Label>
                                 <textarea
                                     value={(*notes).clone()}
                                     oninput={on_notes_change}
@@ -366,16 +368,16 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
                                     placeholder="Comentarios, observaciones o información adicional..."
                                     class="w-full px-3 py-2 border border-muted rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                                 />
-                                <p class="mt-1 text-xs text-muted">
+                                <MutedText size="mt-1 text-xs text-muted">
                                     {"Comentarios adicionales sobre la evaluación"}
-                                </p>
+                                </MutedText>
                             </div>
 
                             // Status
                             <div>
-                                <label class="block text-sm font-medium text-foreground mb-2">
+                                <Label class="text-foreground mb-2">
                                     {"Estado de la Impresión"}
-                                </label>
+                                </Label>
                                 <select
                                     onchange={on_status_change}
                                     class="w-full px-3 py-2 border border-muted rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
@@ -390,9 +392,9 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
                                         {"Ingresada con Error"}
                                     </option>
                                 </select>
-                                <p class="mt-1 text-xs text-muted">
+                                <MutedText size="mt-1 text-xs text-muted">
                                     {"Estado actual de esta evaluación clínica"}
-                                </p>
+                                </MutedText>
                             </div>
 
                             // Action buttons

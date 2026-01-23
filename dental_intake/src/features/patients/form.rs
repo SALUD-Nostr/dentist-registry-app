@@ -11,10 +11,13 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::components::typography::{Title, Subtitle, Label};
+
 #[function_component(PatientForm)]
 pub fn patient_form() -> Html {
     let navigator = use_navigator().unwrap();
     let patient_store = crate::storage::use_patient_store();
+    let notify_patients_changed = crate::storage::use_notify_patients_changed();
 
     // Form state
     let given_name = use_state(|| String::new());
@@ -70,6 +73,7 @@ pub fn patient_form() -> Html {
         let country = country.clone();
         let is_saving = is_saving.clone();
         let errors = errors.clone();
+        let notify_patients_changed = notify_patients_changed.clone();
 
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default();
@@ -96,6 +100,7 @@ pub fn patient_form() -> Html {
             let country_val = (*country).clone();
             let is_saving = is_saving.clone();
             let errors = errors.clone();
+            let notify_patients_changed = notify_patients_changed.clone();
 
             spawn_local(async move {
                 // Build HumanName
@@ -207,6 +212,7 @@ pub fn patient_form() -> Html {
                         match patient_store.save(&patient).await {
                             Ok(()) => {
                                 log!("Patient saved successfully");
+                                notify_patients_changed.emit(());
                                 navigator.push(&crate::router::Route::PatientsList);
                             }
                             Err(e) => {
@@ -244,7 +250,7 @@ pub fn patient_form() -> Html {
                         <crate::components::ArrowLeft class="size-5" />
                         {"Volver a Pacientes"}
                     </button>
-                    <h1 class="text-3xl font-bold">{"Registrar Nuevo Paciente"}</h1>
+                    <Title>{"Registrar Nuevo Paciente"}</Title>
                 </div>
 
                 <form onsubmit={handle_submit}>
@@ -256,7 +262,7 @@ pub fn patient_form() -> Html {
                                     <div class="flex items-start gap-2">
                                         <crate::components::X class="size-5 text-red-600 mt-0.5" />
                                         <div class="flex-1">
-                                            <h3 class="font-semibold text-red-900 mb-1">{"Errores de validación"}</h3>
+                                            <Subtitle class="font-semibold text-red-900 mb-1">{"Errores de validación"}</Subtitle>
                                             <ul class="list-disc list-inside text-sm text-red-700">
                                                 { for (*errors).iter().map(|error| html! {
                                                     <li>{error}</li>
@@ -269,12 +275,12 @@ pub fn patient_form() -> Html {
 
                             // Personal Information Section
                             <div>
-                                <h2 class="text-xl font-semibold mb-4">{"Información Personal"}</h2>
+                                <Subtitle class="mb-4">{"Información Personal"}</Subtitle>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium mb-2">
+                                        <Label class="block mb-2">
                                             {"Nombre"}<span class="text-red-500">{"*"}</span>
-                                        </label>
+                                        </Label>
                                         <input
                                             type="text"
                                             value={(*given_name).clone()}
@@ -291,9 +297,9 @@ pub fn patient_form() -> Html {
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium mb-2">
+                                        <Label class="block mb-2">
                                             {"Apellido"}<span class="text-red-500">{"*"}</span>
-                                        </label>
+                                        </Label>
                                         <input
                                             type="text"
                                             value={(*family_name).clone()}
@@ -310,9 +316,9 @@ pub fn patient_form() -> Html {
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium mb-2">
+                                        <Label class="block mb-2">
                                             {"Fecha de Nacimiento"}
-                                        </label>
+                                        </Label>
                                         <input
                                             type="date"
                                             value={(*birth_date).clone()}
@@ -328,9 +334,9 @@ pub fn patient_form() -> Html {
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium mb-2">
+                                        <Label class="block mb-2">
                                             {"Género"}
-                                        </label>
+                                        </Label>
                                         <select
                                             value={match *gender {
                                                 Some(AdministrativeGender::Male) => "male",
@@ -364,12 +370,12 @@ pub fn patient_form() -> Html {
 
                             // Contact Information Section
                             <div>
-                                <h2 class="text-xl font-semibold mb-4">{"Información de Contacto"}</h2>
+                                <Subtitle class="mb-4">{"Información de Contacto"}</Subtitle>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium mb-2">
+                                        <Label class="block mb-2">
                                             {"Teléfono"}
-                                        </label>
+                                        </Label>
                                         <input
                                             type="tel"
                                             value={(*phone).clone()}
@@ -386,9 +392,9 @@ pub fn patient_form() -> Html {
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium mb-2">
+                                        <Label class="block mb-2">
                                             {"Email"}
-                                        </label>
+                                        </Label>
                                         <input
                                             type="email"
                                             value={(*email).clone()}
@@ -408,12 +414,12 @@ pub fn patient_form() -> Html {
 
                             // Address Section
                             <div>
-                                <h2 class="text-xl font-semibold mb-4">{"Dirección"}</h2>
+                                <Subtitle class="mb-4">{"Dirección"}</Subtitle>
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium mb-2">
+                                        <Label class="block mb-2">
                                             {"Calle"}
-                                        </label>
+                                        </Label>
                                         <input
                                             type="text"
                                             value={(*street).clone()}
@@ -431,9 +437,9 @@ pub fn patient_form() -> Html {
 
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium mb-2">
+                                            <Label class="block mb-2">
                                                 {"Ciudad"}
-                                            </label>
+                                            </Label>
                                             <input
                                                 type="text"
                                                 value={(*city).clone()}
@@ -450,9 +456,9 @@ pub fn patient_form() -> Html {
                                         </div>
 
                                         <div>
-                                            <label class="block text-sm font-medium mb-2">
+                                            <Label class="block mb-2">
                                                 {"Provincia/Estado"}
-                                            </label>
+                                            </Label>
                                             <input
                                                 type="text"
                                                 value={(*state).clone()}
@@ -471,9 +477,9 @@ pub fn patient_form() -> Html {
 
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium mb-2">
+                                            <Label class="block mb-2">
                                                 {"Código Postal"}
-                                            </label>
+                                            </Label>
                                             <input
                                                 type="text"
                                                 value={(*postal_code).clone()}
@@ -490,9 +496,9 @@ pub fn patient_form() -> Html {
                                         </div>
 
                                         <div>
-                                            <label class="block text-sm font-medium mb-2">
+                                            <Label class="block mb-2">
                                                 {"País"}
-                                            </label>
+                                            </Label>
                                             <input
                                                 type="text"
                                                 value={(*country).clone()}

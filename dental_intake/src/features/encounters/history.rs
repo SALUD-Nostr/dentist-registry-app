@@ -7,6 +7,8 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::components::typography::{Title, NormalText, MutedText};
+
 // Pagination page size
 const PAGE_SIZE: usize = 10;
 
@@ -15,6 +17,7 @@ pub fn encounters_history() -> Html {
     let navigator = use_navigator().unwrap();
     let encounter_store = crate::storage::use_encounter_store();
     let patient_store = crate::storage::use_patient_store();
+    let encounter_version = crate::storage::use_encounter_store_version();
 
     // Pagination state
     let page = use_state(|| 0usize);
@@ -37,8 +40,8 @@ pub fn encounters_history() -> Html {
         let search_query = search_query.clone();
 
         use_effect_with(
-            (*page, (*search_query).clone()),
-            move |(page_num, query)| {
+            (*page, (*search_query).clone(), encounter_version),
+            move |(page_num, query, _version)| {
                 let query = query.to_lowercase();
                 let page_num = *page_num;
 
@@ -205,7 +208,7 @@ pub fn encounters_history() -> Html {
             // Header
             <div class="flex flex-col gap-4">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <h2 class="text-2xl font-bold text-foreground">{"Historial de Citas"}</h2>
+                    <Title>{"Historial de Citas"}</Title>
                     <div class="text-sm text-muted">
                         {format!("{} cita(s)", *total_count)}
                     </div>
@@ -247,11 +250,11 @@ pub fn encounters_history() -> Html {
             <div class="flex-1">
                 <div class="bg-white rounded-lg shadow-lg border border-muted/30 overflow-hidden">
                     // Header
-                    <div class="grid grid-cols-12 gap-4 bg-primary/10 px-6 py-3 font-semibold text-sm text-foreground border-b border-muted/30 sticky top-0 z-10">
-                        <div class="col-span-4">{"Paciente"}</div>
-                        <div class="col-span-3">{"Fecha"}</div>
-                        <div class="col-span-2">{"Estado"}</div>
-                        <div class="col-span-3">{"Tipo"}</div>
+                    <div class="grid grid-cols-12 gap-2 sm:gap-4 bg-primary/10 px-3 sm:px-6 py-2 sm:py-3 font-semibold text-xs sm:text-sm text-foreground border-b border-muted/30 sticky top-0 z-10">
+                        <div class="col-span-5 sm:col-span-4">{"Paciente"}</div>
+                        <div class="col-span-4 sm:col-span-3 hidden sm:block">{"Fecha"}</div>
+                        <div class="col-span-3 sm:col-span-2">{"Estado"}</div>
+                        <div class="col-span-4 sm:col-span-3 hidden sm:block">{"Tipo"}</div>
                     </div>
 
                     // Content area
@@ -261,7 +264,7 @@ pub fn encounters_history() -> Html {
                         <div class="p-8 flex items-center justify-center">
                             <div class="flex flex-col items-center gap-4">
                                 <crate::components::X class="size-16 text-red-600" />
-                                <p class="text-red-600 font-semibold">{err}</p>
+                                <NormalText class="text-red-600 font-semibold">{err.clone()}</NormalText>
                             </div>
                         </div>
                     } else if (*encounters).is_empty() && (*search_query).is_empty() {
@@ -270,12 +273,12 @@ pub fn encounters_history() -> Html {
                             <shady_minions::ui::Card>
                                 <div class="flex flex-col items-center justify-center gap-4 py-8">
                                     <crate::components::List class="size-16 text-muted opacity-50" />
-                                    <p class="text-muted text-center font-semibold">
+                                    <NormalText class="text-muted text-center font-semibold">
                                         {"No hay citas en el historial"}
-                                    </p>
-                                    <p class="text-sm text-muted text-center">
+                                    </NormalText>
+                                    <MutedText class="text-center">
                                         {"Las citas completadas o canceladas aparecerán aquí."}
-                                    </p>
+                                    </MutedText>
                                 </div>
                             </shady_minions::ui::Card>
                         </div>
@@ -285,12 +288,12 @@ pub fn encounters_history() -> Html {
                             <shady_minions::ui::Card>
                                 <div class="flex flex-col items-center justify-center gap-4 py-8">
                                     <crate::components::Search class="size-16 text-muted opacity-50" />
-                                    <p class="text-muted text-center font-semibold">
+                                    <NormalText class="text-muted text-center font-semibold">
                                         {"No se encontraron citas"}
-                                    </p>
-                                    <p class="text-sm text-muted text-center">
+                                    </NormalText>
+                                    <MutedText class="text-center">
                                         {format!("No hay resultados para '{}'", *search_query)}
-                                    </p>
+                                    </MutedText>
                                 </div>
                             </shady_minions::ui::Card>
                         </div>
@@ -401,23 +404,23 @@ pub fn encounters_history() -> Html {
                                     <div
                                         key={encounter_id.clone()}
                                         onclick={onclick}
-                                        class="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-primary/5 cursor-pointer transition-colors"
+                                        class="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 hover:bg-primary/5 cursor-pointer transition-colors"
                                     >
-                                        <div class="col-span-4 flex items-center gap-2 min-w-0">
-                                            <crate::components::User class="size-5 text-muted shrink-0" />
-                                            <span class="font-medium text-foreground truncate">
+                                        <div class="col-span-5 sm:col-span-4 flex items-center gap-1 sm:gap-2 min-w-0">
+                                            <crate::components::User class="size-4 sm:size-5 text-muted shrink-0" />
+                                            <span class="font-medium text-xs sm:text-base text-foreground truncate">
                                                 {patient_name}
                                             </span>
                                         </div>
-                                        <div class="col-span-3 flex items-center text-muted min-w-0">
+                                        <div class="col-span-4 sm:col-span-3 hidden sm:flex items-center text-xs sm:text-sm text-muted min-w-0">
                                             <span class="truncate">
                                                 {date_display}
                                             </span>
                                         </div>
-                                        <div class="col-span-2 flex items-center">
+                                        <div class="col-span-7 sm:col-span-2 flex items-center justify-end sm:justify-start">
                                             {status_badge}
                                         </div>
-                                        <div class="col-span-3 flex items-center text-muted min-w-0">
+                                        <div class="col-span-4 sm:col-span-3 hidden sm:flex items-center text-xs sm:text-sm text-muted min-w-0">
                                             <span class="truncate">
                                                 {encounter_type}
                                             </span>
@@ -452,9 +455,9 @@ pub fn encounters_history() -> Html {
                     >
                         {"← Anterior"}
                     </button>
-                    <span class="text-sm text-muted">
+                    <MutedText>
                         {format!("Página {} de {}", *page + 1, total_pages)}
-                    </span>
+                    </MutedText>
                     <button
                         onclick={next_page}
                         disabled={*page >= total_pages - 1}

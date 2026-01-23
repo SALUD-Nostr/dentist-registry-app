@@ -1,6 +1,8 @@
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
+use crate::components::typography::{Subtitle, MutedText, Label};
+
 #[function_component(LoginPage)]
 pub fn login_page() -> Html {
     let nsec = use_state(|| String::new());
@@ -43,20 +45,20 @@ pub fn login_page() -> Html {
                 <div class="flex flex-col items-center gap-6 mb-6">
                     <crate::components::Logo class="size-20 text-primary" />
                     <div class="text-center">
-                        <h1 class="text-2xl font-bold text-foreground mb-2">
+                        <Subtitle class="mb-2">
                             {"Salud Dental"}
-                        </h1>
-                        <p class="text-sm text-muted-foreground">
+                        </Subtitle>
+                        <MutedText>
                             {"Ingresa tu clave privada (nsec) para acceder"}
-                        </p>
+                        </MutedText>
                     </div>
                 </div>
 
                 <form onsubmit={on_submit} class="flex flex-col gap-4">
                     <div class="flex flex-col gap-2">
-                        <label for="nsec" class="text-sm font-medium text-foreground">
+                        <Label for_id="nsec" class="text-foreground">
                             {"Clave Privada (nsec)"}
-                        </label>
+                        </Label>
                         <input
                             id="nsec"
                             type="password"
@@ -82,9 +84,9 @@ pub fn login_page() -> Html {
                 </form>
 
                 <div class="mt-6 pt-6 border-t border-border text-center">
-                    <p class="text-xs text-muted-foreground">
+                    <MutedText size="text-xs text-muted">
                         {"Tu clave privada se almacena de forma segura en tu navegador"}
-                    </p>
+                    </MutedText>
                 </div>
             </shady_minions::ui::Card>
         </div>

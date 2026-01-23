@@ -233,11 +233,12 @@ impl PatientStore {
 #[derive(Clone)]
 pub struct PatientStoreContext {
     pub store: Rc<PatientStore>,
+    pub version: UseStateHandle<u32>,
 }
 
 impl PartialEq for PatientStoreContext {
     fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.store, &other.store)
+        Rc::ptr_eq(&self.store, &other.store) && *self.version == *other.version
     }
 }
 
@@ -250,6 +251,7 @@ pub struct PatientStoreProviderProps {
 #[function_component(PatientStoreProvider)]
 pub fn patient_store_provider(props: &PatientStoreProviderProps) -> Html {
     let store = use_state(|| None::<Rc<PatientStore>>);
+    let version = use_state(|| 0u32);
 
     {
         let store = store.clone();
@@ -275,6 +277,7 @@ pub fn patient_store_provider(props: &PatientStoreProviderProps) -> Html {
     if let Some(store) = (*store).as_ref() {
         let context = PatientStoreContext {
             store: store.clone(),
+            version: version.clone(),
         };
 
         html! {
@@ -297,4 +300,25 @@ pub fn use_patient_store() -> Rc<PatientStore> {
     use_context::<PatientStoreContext>()
         .expect("PatientStoreContext not found")
         .store
+}
+
+/// Hook to get the patient store version for reactive updates
+#[hook]
+pub fn use_patient_store_version() -> u32 {
+    *use_context::<PatientStoreContext>()
+        .expect("PatientStoreContext not found")
+        .version
+}
+
+/// Hook to notify that patients have been updated
+#[hook]
+pub fn use_notify_patients_changed() -> Callback<()> {
+    let context = use_context::<PatientStoreContext>()
+        .expect("PatientStoreContext not found");
+
+    let version = context.version.clone();
+
+    Callback::from(move |_| {
+        version.set(*version + 1);
+    })
 }

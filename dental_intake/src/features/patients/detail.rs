@@ -9,6 +9,8 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::components::typography::{Label, MutedText, NormalText, Subtitle, Title};
+
 #[derive(Properties, PartialEq, Eq)]
 pub struct PatientDetailProps {
     pub patient_id: String,
@@ -122,13 +124,13 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                     </button>
 
                     if let Some(p) = (*patient).as_ref() {
-                        <h1 class="text-2xl font-bold">
+                        <Title>
                             {p.full_name().unwrap_or_else(|| "Sin nombre".to_string())}
-                        </h1>
-                        <p class="text-xs text-muted">{"ID: "}{&props.patient_id}</p>
+                        </Title>
+                        <MutedText class="text-xs">{"ID: "}{&props.patient_id}</MutedText>
                     } else {
-                        <h1 class="text-2xl font-bold">{"Detalles del Paciente"}</h1>
-                        <p class="text-xs text-muted">{"ID: "}{&props.patient_id}</p>
+                        <Title>{"Detalles del Paciente"}</Title>
+                        <MutedText class="text-xs">{"ID: "}{&props.patient_id}</MutedText>
                     }
                 </div>
 
@@ -136,7 +138,7 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                     <div class="flex items-center justify-center py-8">
                         <div class="flex flex-col items-center gap-4">
                             <div class="size-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                            <p class="text-muted">{"Cargando información del paciente..."}</p>
+                            <MutedText>{"Cargando información del paciente..."}</MutedText>
                         </div>
                     </div>
                 } else if let Some(err) = (*error).as_ref() {
@@ -159,9 +161,9 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                             // Personal Information Card
                             <shady_minions::ui::Card class="border-muted/30 shadow-lg">
                                 <div class="p-6">
-                                    <div class="text-2xl font-bold mb-4 flex items-center gap-2 justify-between">
-                                        {"Información Personal"}
-                                        <p class="text-base">
+                                    <div class="mb-4 flex items-center gap-2 justify-between">
+                                        <Subtitle>{"Información Personal"}</Subtitle>
+                                        <NormalText class="text-base">
                                             if p.active.unwrap_or(false) {
                                                 <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md text-sm font-medium">
                                                     <crate::components::Check class="size-4" />
@@ -172,39 +174,39 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                                                     {"Inactivo"}
                                                 </span>
                                             }
-                                        </p>
+                                        </NormalText>
                                     </div>
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-muted mb-1">{"Nombre Completo"}</label>
-                                            <p class="text-base font-medium text-foreground">
+                                            <Label class="block mb-1">{"Nombre Completo"}</Label>
+                                            <NormalText class="font-medium">
                                                 {p.full_name().unwrap_or_else(|| "-".to_string())}
-                                            </p>
+                                            </NormalText>
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-medium text-muted mb-1">{"Género"}</label>
-                                            <p class="text-base text-foreground">
+                                            <Label class="block mb-1">{"Género"}</Label>
+                                            <NormalText>
                                                 {match &p.gender {
                                                     Some(AdministrativeGender::Male) => "Masculino",
                                                     Some(AdministrativeGender::Female) => "Femenino",
                                                     Some(AdministrativeGender::Other) => "Otro",
                                                     Some(AdministrativeGender::Unknown) | None => "-",
                                                 }}
-                                            </p>
+                                            </NormalText>
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-medium text-muted mb-1">{"Fecha de Nacimiento"}</label>
-                                            <p class="text-base text-foreground">
+                                            <Label class="block mb-1">{"Fecha de Nacimiento"}</Label>
+                                            <NormalText>
                                                 {p.birth_date
                                                     .map(|bd| bd.format("%d/%m/%Y").to_string())
                                                     .unwrap_or_else(|| "-".to_string())}
-                                            </p>
+                                            </NormalText>
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-medium text-muted mb-1">{"Edad"}</label>
-                                            <p class="text-base text-foreground">
+                                            <Label class="block mb-1">{"Edad"}</Label>
+                                            <NormalText>
                                                 {p.birth_date.map(|bd| format!("{} años", chrono::Local::now().date_naive().years_since(bd).unwrap_or(0))).unwrap_or_else(|| "-".to_string())}
-                                            </p>
+                                            </NormalText>
                                         </div>
                                     </div>
                                 </div>
@@ -214,12 +216,12 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                             if p.telecom.is_some() && !p.telecom.as_ref().unwrap().is_empty() {
                                 <shady_minions::ui::Card class="border-muted/30 shadow-lg">
                                     <div class="p-6">
-                                        <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                                        <Subtitle class="mb-4 flex items-center gap-2">
                                             <svg class="size-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                             </svg>
                                             {"Información de Contacto"}
-                                        </h2>
+                                        </Subtitle>
                                         <div class="grid grid-cols-1 grid-cols-2 gap-4">
                                             { for p.telecom.as_ref().unwrap().iter().map(|contact| {
                                                 html! {
@@ -249,17 +251,17 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                                                             }}
                                                         </div>
                                                         <div class="flex-1">
-                                                            <p class="text-sm font-medium text-muted mb-1">
+                                                            <Label class="font-medium mb-1">
                                                                 {match contact.system {
                                                                     ContactPointSystem::Phone => "Teléfono",
                                                                     ContactPointSystem::Email => "Email",
                                                                     ContactPointSystem::Fax => "Fax",
                                                                     ContactPointSystem::Sms => "SMS",
                                                                 }}
-                                                            </p>
-                                                            <p class="text-base font-medium text-foreground">
-                                                                {&contact.value}
-                                                            </p>
+                                                            </Label>
+                                                            <NormalText class="font-medium">
+                                                                {contact.value.clone()}
+                                                            </NormalText>
                                                         </div>
                                                     </div>
                                                 }
@@ -274,29 +276,29 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                         if p.address.is_some() && !p.address.as_ref().unwrap().is_empty() {
                             <shady_minions::ui::Card class="border-muted/30 shadow-lg">
                                 <div class="p-6">
-                                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                                    <Subtitle class="mb-4 flex items-center gap-2">
                                         <svg class="size-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                         </svg>
                                         {"Dirección"}
-                                    </h2>
+                                    </Subtitle>
                                     <div class="space-y-4">
                                         { for p.address.as_ref().unwrap().iter().map(|addr| {
                                             html! {
                                                 <div class="p-4 bg-gray-50 rounded-lg">
                                                     // Full text address if available
                                                     if let Some(text) = &addr.text {
-                                                        <p class="text-base font-medium text-foreground mb-3">
-                                                            {text}
-                                                        </p>
+                                                        <NormalText class="font-medium mb-3">
+                                                            {text.clone()}
+                                                        </NormalText>
                                                     }
 
                                                     // Structured address
                                                     <div class="space-y-2 text-sm">
                                                         if let Some(lines) = &addr.line {
                                                             { for lines.iter().map(|line| html! {
-                                                                <p class="text-muted">{line}</p>
+                                                                <MutedText class="text-sm">{line.clone()}</MutedText>
                                                             }) }
                                                         }
 
@@ -313,7 +315,7 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                                                         </div>
 
                                                         if let Some(country) = &addr.country {
-                                                            <p class="text-muted">{country}</p>
+                                                            <MutedText class="text-sm">{country.clone()}</MutedText>
                                                         }
                                                     </div>
                                                 </div>
@@ -326,10 +328,10 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
 
                         // Encounters Card
                         <shady_minions::ui::Card class="!border-0 !shadow-none">
-                                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                                <Subtitle class="mb-4 flex items-center gap-2">
                                     <crate::components::Stethoscope class="size-6 text-primary" />
                                     {"Citas del Paciente"}
-                                </h2>
+                                </Subtitle>
 
                                 if *is_loading_encounters {
                                     <div class="flex items-center justify-center py-8">
@@ -338,12 +340,12 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                                 } else if (*encounters).is_empty() {
                                     <div class="flex flex-col items-center justify-center gap-4 py-8">
                                         <crate::components::Calendar class="size-16 text-muted opacity-50" />
-                                        <p class="text-muted text-center font-semibold">
+                                        <MutedText class="text-center font-semibold">
                                             {"No hay citas registradas"}
-                                        </p>
-                                        <p class="text-sm text-muted text-center">
+                                        </MutedText>
+                                        <MutedText class="text-sm text-center">
                                             {"Las citas del paciente aparecerán aquí."}
-                                        </p>
+                                        </MutedText>
                                     </div>
                                 } else {
                                     <div class="space-y-3">
@@ -380,16 +382,16 @@ fn encounter_preview_card(props: &EncounterPreviewProps) -> Html {
             classes={classes!("flex", "flex-col", "sm:flex-row", "sm:items-center", "justify-between", "gap-4", "p-4", "bg-gray-50", "rounded-lg", "hover:bg-gray-100", "transition-colors", "cursor-pointer", "border", "border-muted/30", "shadow-lg", "hover:border-l-4", "hover:border-primary")}
         >
             <div class="flex items-center gap-4 flex-1 min-w-0">
-                <div class="text-2xl font-bold text-primary">
+                <Subtitle class="text-primary">
                     {
                         encounter.period.as_ref().and_then(|p| p.start)
                         .map_or_else(
                             || "-".to_string(),
                             |s| s.format("%d").to_string())
                     }
-                </div>
+                </Subtitle>
                 <div class="flex flex-col min-w-0">
-                    <p class="font-semibold text-foreground truncate">
+                    <NormalText class="font-semibold truncate">
                         {match &encounter.class {
                             EncounterClass::Ambulatory => "Consulta Ambulatoria",
                             EncounterClass::Emergency => "Emergencia",
@@ -399,10 +401,10 @@ fn encounter_preview_card(props: &EncounterPreviewProps) -> Html {
                             EncounterClass::Inpatient => "Hospitalización",
                             EncounterClass::Acute => "Atención Aguda",
                         }}
-                    </p>
-                    <p class="text-sm text-muted">
+                    </NormalText>
+                    <MutedText class="text-sm">
                         {date.format("%d/%m/%Y").to_string()}
-                    </p>
+                    </MutedText>
                 </div>
             </div>
             <div>

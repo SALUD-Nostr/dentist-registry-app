@@ -1,6 +1,8 @@
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::components::typography::{Title, Subtitle, MutedText};
+
 #[function_component(Home)]
 pub fn home() -> Html {
     let navigator = use_navigator().unwrap();
@@ -30,12 +32,12 @@ pub fn home() -> Html {
         <div class="flex flex-col gap-4 sm:gap-8  sm:max-w-xl md:max-w-3xl lg:max-w-5xl  size-full sm:items-center sm:justify-center overflow-y-auto flex-1 self-stretch mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8">
             <div class="flex flex-col items-center">
                 <crate::components::Logo class="size-12 sm:size-16 md:size-20 m-4 text-primary" />
-                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-center">
+                <Title size="text-3xl sm:text-4xl md:text-5xl font-bold text-center">
                     {"Salud Dental"}
-                </h1>
-                <p class="text-center text-muted max-w-lg mt-4">
+                </Title>
+                <MutedText class="text-center max-w-lg mt-4">
                     {"Sistema de gestión de pacientes y citas médicas"}
-                </p>
+                </MutedText>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -86,12 +88,12 @@ fn home_card(props: &HomeCardProps) -> Html {
         >
             { icon.clone() }
             <div class="flex flex-col gap-1 sm:gap-2 text-start sm:text-center">
-                <h3 class="text-lg font-semibold">
+                <Subtitle>
                     { *title }
-                </h3>
-                <p class="text-sm text-muted">
+                </Subtitle>
+                <MutedText>
                     { *description }
-                </p>
+                </MutedText>
             </div>
         </button>
     }

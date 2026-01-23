@@ -7,11 +7,14 @@ use wasm_bindgen::JsValue;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::components::typography::Title;
+
 #[function_component(EncountersSchedule)]
 pub fn encounters_schedule() -> Html {
     let navigator = use_navigator().unwrap();
     let encounter_store = crate::storage::use_encounter_store();
     let patient_store = crate::storage::use_patient_store();
+    let encounter_version = crate::storage::use_encounter_store_version();
 
     let calendar_state = use_mut_ref(|| None::<yew_full_calendar::Calendar>);
     let is_loading = use_state(|| false);
@@ -62,7 +65,6 @@ pub fn encounters_schedule() -> Html {
     };
 
     let on_event_click = {
-        let navigator = navigator.clone();
         Callback::from(move |event: yew_full_calendar::EventClickInfo| {
             let Some(event) = event.event() else {
                 return;
@@ -72,6 +74,29 @@ pub fn encounters_schedule() -> Html {
             }
         })
     };
+
+    // Reload encounters when version changes
+    {
+        let calendar_state = calendar_state.clone();
+        let encounter_store = encounter_store.clone();
+        let patient_store = patient_store.clone();
+        let is_loading = is_loading.clone();
+
+        use_effect_with(encounter_version, move |_version| {
+            // Only reload if calendar is already initialized
+            if calendar_state.borrow().is_some() {
+                if let Err(e) = load_encounters(
+                    calendar_state.clone(),
+                    Some(encounter_store.clone()),
+                    Some(patient_store.clone()),
+                    is_loading.clone(),
+                ) {
+                    log!("Error loading encounters:", format!("{:?}", e));
+                }
+            }
+            || ()
+        });
+    }
 
     let calendar_options = yew_full_calendar::Options::default()
         .with_locale(yew_full_calendar::Locale::Es)
@@ -86,10 +111,10 @@ pub fn encounters_schedule() -> Html {
         ));
 
     html! {
-        <div class="flex flex-col size-full p-4 md:p-8">
+        <div class="flex flex-col size-full p-4">
             <div class="max-w-7xl mx-auto w-full h-full flex flex-col">
                 <div class="flex justify-between items-center mb-6">
-                    <h1 class="text-3xl font-bold">{"Calendario de Citas"}</h1>
+                    <Title>{"Calendario de Citas"}</Title>
                     <button
                         onclick={handle_new_encounter}
                         class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center gap-2"
@@ -99,7 +124,7 @@ pub fn encounters_schedule() -> Html {
                     </button>
                 </div>
 
-                <shady_minions::ui::Card class="flex-1 !p-0 !max-w-none !border-0 shadow-lg ">
+                <shady_minions::ui::Card class="flex-1 !p-0 !max-w-none !border-0 !shadow-none ">
                     <style>
                         {r"
                         .fc-header-toolbar {

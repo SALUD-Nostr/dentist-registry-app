@@ -123,11 +123,12 @@ impl EncounterStore {
 #[derive(Clone)]
 pub struct EncounterStoreContext {
     pub store: Rc<EncounterStore>,
+    pub version: UseStateHandle<u32>,
 }
 
 impl PartialEq for EncounterStoreContext {
     fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.store, &other.store)
+        Rc::ptr_eq(&self.store, &other.store) && *self.version == *other.version
     }
 }
 
@@ -143,9 +144,11 @@ pub fn encounter_store_provider(props: &EncounterStoreProviderProps) -> Html {
     let patient_store = crate::storage::use_patient_store();
 
     let store = Rc::new(EncounterStore::from_db(patient_store.db.clone()));
+    let version = use_state(|| 0u32);
 
     let context = EncounterStoreContext {
         store: store.clone(),
+        version: version.clone(),
     };
 
     html! {
@@ -161,4 +164,25 @@ pub fn use_encounter_store() -> Rc<EncounterStore> {
     use_context::<EncounterStoreContext>()
         .expect("EncounterStoreContext not found")
         .store
+}
+
+/// Hook to get the encounter store version for reactive updates
+#[hook]
+pub fn use_encounter_store_version() -> u32 {
+    *use_context::<EncounterStoreContext>()
+        .expect("EncounterStoreContext not found")
+        .version
+}
+
+/// Hook to notify that encounters have been updated
+#[hook]
+pub fn use_notify_encounters_changed() -> Callback<()> {
+    let context = use_context::<EncounterStoreContext>()
+        .expect("EncounterStoreContext not found");
+
+    let version = context.version.clone();
+
+    Callback::from(move |_| {
+        version.set(*version + 1);
+    })
 }

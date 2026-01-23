@@ -6,10 +6,13 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::components::typography::{Title, NormalText, MutedText};
+
 #[function_component(PatientsList)]
 pub fn patients_list() -> Html {
     let navigator = use_navigator().unwrap();
     let patient_store = crate::storage::use_patient_store();
+    let patient_version = crate::storage::use_patient_store_version();
 
     let search_query = use_state(String::new);
     let patients = use_state(|| Vec::<Patient>::new());
@@ -25,7 +28,7 @@ pub fn patients_list() -> Html {
         let error = error.clone();
         let patient_store = patient_store.clone();
 
-        use_effect_with((), move |_| {
+        use_effect_with(patient_version, move |_version| {
             spawn_local(async move {
                 match patient_store.get_all().await {
                     Ok(all_patients) => {
@@ -103,7 +106,7 @@ pub fn patients_list() -> Html {
         <div class="flex flex-col size-full p-4 gap-6">
             <div class="flex flex-col gap-4 justify-between">
                 <div class="flex items-center justify-between gap-4">
-                    <h2 class="text-2xl font-bold text-foreground">{"Pacientes Registrados"}</h2>
+                    <Title>{"Pacientes Registrados"}</Title>
                     <div class="text-sm text-muted">
                         {format!("{} paciente(s)", (*filtered_patients).len())}
                     </div>
@@ -163,7 +166,7 @@ pub fn patients_list() -> Html {
                     <div class="flex items-center justify-center h-full">
                         <div class="flex flex-col items-center gap-4">
                             <div class="size-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                            <p class="text-muted">{"Cargando pacientes..."}</p>
+                            <MutedText>{"Cargando pacientes..."}</MutedText>
                         </div>
                     </div>
                 } else if let Some(err) = (*error).as_ref() {
@@ -171,8 +174,8 @@ pub fn patients_list() -> Html {
                         <shady_minions::ui::Card>
                             <div class="flex flex-col items-center gap-4 py-8">
                                 <crate::components::X class="size-16 text-red-600" />
-                                <p class="text-red-600 font-semibold">{"Error al cargar pacientes"}</p>
-                                <p class="text-sm text-muted">{err}</p>
+                                <NormalText class="text-red-600 font-semibold">{"Error al cargar pacientes"}</NormalText>
+                                <MutedText>{err.clone()}</MutedText>
                             </div>
                         </shady_minions::ui::Card>
                     </div>
@@ -182,12 +185,12 @@ pub fn patients_list() -> Html {
                         <shady_minions::ui::Card>
                             <div class="flex flex-col items-center justify-center gap-4 py-8">
                                 <crate::components::Users class="size-16 text-muted opacity-50" />
-                                <p class="text-muted text-center font-semibold">
+                                <NormalText class="text-muted text-center font-semibold">
                                     {"No hay pacientes registrados en el sistema."}
-                                </p>
-                                <p class="text-sm text-muted text-center">
+                                </NormalText>
+                                <MutedText class="text-center">
                                     {"Haz clic en 'Nuevo Paciente' para registrar el primer paciente."}
-                                </p>
+                                </MutedText>
                             </div>
                         </shady_minions::ui::Card>
                     </div>
@@ -197,12 +200,12 @@ pub fn patients_list() -> Html {
                         <shady_minions::ui::Card>
                             <div class="flex flex-col items-center justify-center gap-4 py-8">
                                 <crate::components::Search class="size-16 text-muted opacity-50" />
-                                <p class="text-muted text-center font-semibold">
+                                <NormalText class="text-muted text-center font-semibold">
                                     {"No se encontraron pacientes"}
-                                </p>
-                                <p class="text-sm text-muted text-center">
+                                </NormalText>
+                                <MutedText class="text-center">
                                     {format!("No hay resultados para '{}'", *search_query)}
-                                </p>
+                                </MutedText>
                             </div>
                         </shady_minions::ui::Card>
                     </div>
@@ -210,11 +213,11 @@ pub fn patients_list() -> Html {
                     // Display patients table
                     <div class="bg-white rounded-lg shadow-lg border border-muted/30 overflow-hidden">
                         // Header
-                        <div class="grid grid-cols-12 gap-4 bg-primary/10 px-6 py-3 font-semibold text-sm text-foreground border-b border-muted/30 sticky top-0 z-10">
-                            <div class="col-span-4">{"Nombre"}</div>
-                            <div class="col-span-2">{"Género"}</div>
-                            <div class="col-span-3">{"Fecha de Nacimiento"}</div>
-                            <div class="col-span-3">{"Teléfono"}</div>
+                        <div class="grid grid-cols-12 gap-2 sm:gap-4 bg-primary/10 px-3 sm:px-6 py-2 sm:py-3 font-semibold text-xs sm:text-sm text-foreground border-b border-muted/30 sticky top-0 z-10">
+                            <div class="col-span-6 sm:col-span-4">{"Nombre"}</div>
+                            <div class="col-span-3 sm:col-span-2 hidden sm:block">{"Género"}</div>
+                            <div class="col-span-3 sm:col-span-3 hidden sm:block">{"Nacimiento"}</div>
+                            <div class="col-span-6 sm:col-span-3">{"Teléfono"}</div>
                         </div>
 
                         // Patient rows
@@ -233,15 +236,15 @@ pub fn patients_list() -> Html {
                                     <div
                                         key={patient_id.clone()}
                                         onclick={onclick}
-                                        class="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-primary/5 cursor-pointer transition-colors"
+                                        class="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 hover:bg-primary/5 cursor-pointer transition-colors"
                                     >
-                                        <div class="col-span-4 flex items-center gap-2">
-                                            <crate::components::User class="size-5 text-muted" />
-                                            <span class="font-medium text-foreground">
+                                        <div class="col-span-6 sm:col-span-4 flex items-center gap-1 sm:gap-2 min-w-0">
+                                            <crate::components::User class="size-4 sm:size-5 text-muted shrink-0" />
+                                            <span class="font-medium text-xs sm:text-base text-foreground truncate">
                                                 {patient.full_name().unwrap_or_else(|| "Sin nombre".to_string())}
                                             </span>
                                         </div>
-                                        <div class="col-span-2 flex items-center text-muted">
+                                        <div class="col-span-3 sm:col-span-2 hidden sm:flex items-center text-xs sm:text-sm text-muted truncate">
                                             {
                                                 match &patient.gender {
                                                     Some(AdministrativeGender::Male) => "Masculino",
@@ -251,21 +254,23 @@ pub fn patients_list() -> Html {
                                                 }
                                             }
                                         </div>
-                                        <div class="col-span-3 flex items-center text-muted">
+                                        <div class="col-span-3 sm:col-span-3 hidden sm:flex items-center text-xs sm:text-sm text-muted truncate">
                                             {
                                                 patient.birth_date
                                                     .map(|bd| bd.format("%d/%m/%Y").to_string())
                                                     .unwrap_or_else(|| "-".to_string())
                                             }
                                         </div>
-                                        <div class="col-span-3 flex items-center text-muted">
-                                            {
-                                                patient.telecom
-                                                    .as_ref()
-                                                    .and_then(|telecom| telecom.first())
-                                                    .map(|contact| contact.value.clone())
-                                                    .unwrap_or_else(|| "-".to_string())
-                                            }
+                                        <div class="col-span-6 sm:col-span-3 flex items-center text-xs sm:text-sm text-muted min-w-0">
+                                            <span class="truncate">
+                                                {
+                                                    patient.telecom
+                                                        .as_ref()
+                                                        .and_then(|telecom| telecom.first())
+                                                        .map(|contact| contact.value.clone())
+                                                        .unwrap_or_else(|| "-".to_string())
+                                                }
+                                            </span>
                                         </div>
                                     </div>
                                 }

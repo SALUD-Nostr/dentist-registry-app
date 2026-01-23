@@ -10,6 +10,8 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::components::typography::{Title, Subtitle, Label, MutedText, NormalText};
+
 #[derive(Clone, PartialEq)]
 enum FormStep {
     SelectPatient,
@@ -22,6 +24,7 @@ pub fn encounter_form() -> Html {
     let navigator = use_navigator().unwrap();
     let patient_store = crate::storage::use_patient_store();
     let encounter_store = crate::storage::use_encounter_store();
+    let notify_encounters_changed = crate::storage::use_notify_encounters_changed();
 
     // Form state
     let current_step = use_state(|| FormStep::SelectPatient);
@@ -124,6 +127,7 @@ pub fn encounter_form() -> Html {
         let appointment_reason = appointment_reason.clone();
         let is_saving = is_saving.clone();
         let errors = errors.clone();
+        let notify_encounters_changed = notify_encounters_changed.clone();
 
         Callback::from(move |_| {
             let Some(patient) = (*selected_patient).as_ref() else {
@@ -149,6 +153,7 @@ pub fn encounter_form() -> Html {
             let reason = (*appointment_reason).clone();
             let is_saving = is_saving.clone();
             let errors = errors.clone();
+            let notify_encounters_changed = notify_encounters_changed.clone();
 
             spawn_local(async move {
                 // Parse date and time
@@ -219,6 +224,7 @@ pub fn encounter_form() -> Html {
                 match encounter_store.save(&encounter).await {
                     Ok(()) => {
                         log!("Encounter saved successfully");
+                        notify_encounters_changed.emit(());
                         navigator.push(&crate::router::Route::EncountersSchedule);
                     }
                     Err(e) => {
@@ -249,7 +255,7 @@ pub fn encounter_form() -> Html {
                         <crate::components::ArrowLeft class="size-5" />
                         {"Volver al Calendario"}
                     </button>
-                    <h1 class="text-3xl font-bold">{"Agendar Nueva Cita"}</h1>
+                    <Title>{"Agendar Nueva Cita"}</Title>
                 </div>
 
                 // Error messages
@@ -258,7 +264,7 @@ pub fn encounter_form() -> Html {
                         <div class="flex items-start gap-2">
                             <crate::components::X class="size-5 text-red-600 mt-0.5" />
                             <div class="flex-1">
-                                <h3 class="font-semibold text-red-900 mb-1">{"Errores"}</h3>
+                                <Subtitle class="font-semibold text-red-900 mb-1">{"Errores"}</Subtitle>
                                 <ul class="list-disc list-inside text-sm text-red-700">
                                     { for (*errors).iter().map(|error| html! {
                                         <li>{error}</li>
@@ -386,10 +392,10 @@ pub fn encounter_form() -> Html {
                         // Step 1: Patient Search
                         <div class="space-y-6">
                             <div>
-                                <h2 class="text-xl font-semibold mb-4">{"Seleccionar Paciente"}</h2>
-                                <p class="text-sm text-muted mb-4">
+                                <Subtitle class="mb-4">{"Seleccionar Paciente"}</Subtitle>
+                                <MutedText class="mb-4">
                                     {"Busca al paciente por nombre para agendar la cita"}
-                                </p>
+                                </MutedText>
                             </div>
 
                             <div class="relative">
@@ -432,13 +438,13 @@ pub fn encounter_form() -> Html {
                                                         <div class="flex items-center gap-3">
                                                             <crate::components::User class="size-5 text-muted" />
                                                             <div class="flex-1">
-                                                                <p class="font-medium text-foreground">
+                                                                <NormalText>
                                                                     {patient.full_name().unwrap_or_else(|| "Sin nombre".to_string())}
-                                                                </p>
+                                                                </NormalText>
                                                                 if let Some(birth_date) = patient.birth_date {
-                                                                    <p class="text-sm text-muted">
+                                                                    <MutedText>
                                                                         {format!("Nacimiento: {}", birth_date.format("%d/%m/%Y"))}
-                                                                    </p>
+                                                                    </MutedText>
                                                                 }
                                                             </div>
                                                         </div>
@@ -455,10 +461,10 @@ pub fn encounter_form() -> Html {
                                     <div class="flex items-center gap-3">
                                         <crate::components::Check class="size-5 text-green-600" />
                                         <div>
-                                            <p class="font-medium text-green-900">
+                                            <NormalText class="text-green-900">
                                                 {"Paciente seleccionado: "}
                                                 {patient.full_name().unwrap_or_else(|| "Sin nombre".to_string())}
-                                            </p>
+                                            </NormalText>
                                         </div>
                                     </div>
                                 </div>
@@ -487,18 +493,18 @@ pub fn encounter_form() -> Html {
                         // Step 2: Date/Time and Type Selection
                         <div class="space-y-6">
                             <div>
-                                <h2 class="text-xl font-semibold mb-4">{"Fecha, Hora y Tipo de Cita"}</h2>
-                                <p class="text-sm text-muted mb-4">
+                                <Subtitle class="mb-4">{"Fecha, Hora y Tipo de Cita"}</Subtitle>
+                                <MutedText class="mb-4">
                                     {"Selecciona cuándo será la cita y qué tipo de consulta"}
-                                </p>
+                                </MutedText>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 // Date
                                 <div>
-                                    <label class="block text-sm font-medium mb-2">
+                                    <Label class="mb-2">
                                         {"Fecha"}<span class="text-red-500">{"*"}</span>
-                                    </label>
+                                    </Label>
                                     <input
                                         type="date"
                                         value={(*appointment_date).clone()}
@@ -515,9 +521,9 @@ pub fn encounter_form() -> Html {
 
                                 // Time
                                 <div>
-                                    <label class="block text-sm font-medium mb-2">
+                                    <Label class="mb-2">
                                         {"Hora"}<span class="text-red-500">{"*"}</span>
-                                    </label>
+                                    </Label>
                                     <input
                                         type="time"
                                         value={(*appointment_time).clone()}
@@ -534,9 +540,9 @@ pub fn encounter_form() -> Html {
 
                                 // Duration
                                 <div>
-                                    <label class="block text-sm font-medium mb-2">
+                                    <Label class="mb-2">
                                         {"Duración (minutos)"}
-                                    </label>
+                                    </Label>
                                     <select
                                         value={(*appointment_duration).to_string()}
                                         onchange={
@@ -561,9 +567,9 @@ pub fn encounter_form() -> Html {
 
                                 // Encounter Class
                                 <div>
-                                    <label class="block text-sm font-medium mb-2">
+                                    <Label class="mb-2">
                                         {"Tipo de Cita"}<span class="text-red-500">{"*"}</span>
-                                    </label>
+                                    </Label>
                                     <select
                                         value={match *appointment_class {
                                             EncounterClass::Ambulatory => "ambulatory",
@@ -598,9 +604,9 @@ pub fn encounter_form() -> Html {
 
                             // Reason
                             <div>
-                                <label class="block text-sm font-medium mb-2">
+                                <Label class="mb-2">
                                     {"Motivo de la Cita (Opcional)"}
-                                </label>
+                                </Label>
                                 <textarea
                                     value={(*appointment_reason).clone()}
                                     oninput={
@@ -641,58 +647,58 @@ pub fn encounter_form() -> Html {
                         // Step 3: Confirmation
                         <div class="space-y-6">
                             <div>
-                                <h2 class="text-xl font-semibold mb-4">{"Confirmar Cita"}</h2>
-                                <p class="text-sm text-muted mb-4">
+                                <Subtitle class="mb-4">{"Confirmar Cita"}</Subtitle>
+                                <MutedText class="mb-4">
                                     {"Revisa los detalles antes de agendar"}
-                                </p>
+                                </MutedText>
                             </div>
 
                             if let Some(patient) = (*selected_patient).as_ref() {
                                 <div class="space-y-4">
                                     // Patient info
                                     <div class="p-4 bg-gray-50 rounded-lg">
-                                        <h3 class="text-sm font-medium text-muted mb-2">{"Paciente"}</h3>
+                                        <Subtitle class="text-muted mb-2">{"Paciente"}</Subtitle>
                                         <div class="flex items-center gap-2">
                                             <crate::components::User class="size-5 text-primary" />
-                                            <p class="font-medium text-foreground">
+                                            <NormalText>
                                                 {patient.full_name().unwrap_or_else(|| "Sin nombre".to_string())}
-                                            </p>
+                                            </NormalText>
                                         </div>
                                     </div>
 
                                     // Date and time
                                     <div class="p-4 bg-gray-50 rounded-lg">
-                                        <h3 class="text-sm font-medium text-muted mb-3">{"Fecha y Hora"}</h3>
+                                        <Subtitle class="text-muted mb-3">{"Fecha y Hora"}</Subtitle>
                                         <div class="grid grid-cols-2 gap-4">
                                             <div>
-                                                <p class="text-xs text-muted mb-1">{"Fecha"}</p>
-                                                <p class="font-medium text-foreground">
+                                                <MutedText class="text-xs mb-1">{"Fecha"}</MutedText>
+                                                <NormalText>
                                                     {
                                                         match NaiveDate::parse_from_str(&*appointment_date, "%Y-%m-%d") {
                                                             Ok(date) => date.format("%d/%m/%Y").to_string(),
                                                             Err(_) => (*appointment_date).clone()
                                                         }
                                                     }
-                                                </p>
+                                                </NormalText>
                                             </div>
                                             <div>
-                                                <p class="text-xs text-muted mb-1">{"Hora"}</p>
-                                                <p class="font-medium text-foreground">{&*appointment_time}</p>
+                                                <MutedText class="text-xs mb-1">{"Hora"}</MutedText>
+                                                <NormalText>{(*appointment_time).clone()}</NormalText>
                                             </div>
                                             <div>
-                                                <p class="text-xs text-muted mb-1">{"Duración"}</p>
-                                                <p class="font-medium text-foreground">{format!("{} min", *appointment_duration)}</p>
+                                                <MutedText class="text-xs mb-1">{"Duración"}</MutedText>
+                                                <NormalText>{format!("{} min", *appointment_duration)}</NormalText>
                                             </div>
                                             <div>
-                                                <p class="text-xs text-muted mb-1">{"Tipo"}</p>
-                                                <p class="font-medium text-foreground">
+                                                <MutedText class="text-xs mb-1">{"Tipo"}</MutedText>
+                                                <NormalText>
                                                     {match *appointment_class {
                                                         EncounterClass::Emergency => "Emergencia",
                                                         EncounterClass::HomeHealth => "Visita a Domicilio",
                                                         EncounterClass::Virtual => "Consulta Virtual",
                                                         _ => "Consulta Ambulatoria",
                                                     }}
-                                                </p>
+                                                </NormalText>
                                             </div>
                                         </div>
                                     </div>
@@ -700,8 +706,8 @@ pub fn encounter_form() -> Html {
                                     // Reason if provided
                                     if !(*appointment_reason).trim().is_empty() {
                                         <div class="p-4 bg-gray-50 rounded-lg">
-                                            <h3 class="text-sm font-medium text-muted mb-2">{"Motivo"}</h3>
-                                            <p class="text-foreground">{&*appointment_reason}</p>
+                                            <Subtitle class="text-muted mb-2">{"Motivo"}</Subtitle>
+                                            <NormalText class="text-foreground">{(*appointment_reason).clone()}</NormalText>
                                         </div>
                                     }
                                 </div>
