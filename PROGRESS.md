@@ -1,6 +1,6 @@
 # Progress Update - Salud Dental
 
-**Last Updated:** 2026-01-22
+**Last Updated:** 2026-01-23
 **Status:** Core features implemented and functional
 
 ---
@@ -10,7 +10,14 @@
 ### Patient Management (Complete)
 - ✅ Patient registration form with FHIR R4 compliance
 - ✅ Patient list view with IndexedDB integration and real-time search
-- ✅ Patient detail view with full information display
+- ✅ **Patient detail view with encounters display**
+  - Shows complete patient information (personal, contact, address)
+  - **Displays all patient encounters sorted by date (most recent first)**
+  - **Encounter type, date, time, and status badges**
+  - **Click-to-navigate functionality for encounter details**
+  - **Loading, empty, and error states**
+  - **Efficient database queries using by_patient index**
+  - **Spanish UI localization throughout**
 
 ### Encounter Management (Complete)
 - ✅ Encounter scheduling form with multi-step workflow (patient search, date/time, confirmation)
@@ -39,7 +46,7 @@
 
 ### Storage Layer (Complete)
 - ✅ IndexedDB storage layer for FHIR resources
-- ✅ PatientStore with CRUD operations
+- ✅ PatientStore with CRUD operations and efficient by_patient index
 - ✅ EncounterStore with CRUD operations
 - ✅ ClinicalImpressionStore with CRUD operations
 - ✅ Unified error handling (AppError enum)
@@ -148,7 +155,7 @@ All modules compile successfully with placeholder UI.
 
 - `list.rs` - Patient list view with search bar and table structure
 - `form.rs` - Patient registration form (placeholder)
-- `detail.rs` - Patient detail view showing info + encounter history
+- `detail.rs` - **Patient detail view with encounters display (COMPLETE)**
 
 #### Encounters Module
 **Location:** `dental_intake/src/features/encounters/`
@@ -173,11 +180,46 @@ All modules compile successfully with placeholder UI.
 ### Compilation Status
 ✅ **App compiles successfully!**
 
+**Recent Fixes:**
+- ✅ Fixed complex nested html! macro syntax issues in patient detail view
+- ✅ Removed broken component files (encounters_info.rs, contact_info.rs)
+- ✅ Implemented clean inline encounters display component
+- ✅ Fixed borrow checker issues with navigator cloning
+- ✅ Resolved type safety issues with Option<NaiveDate> handling
+- ✅ Updated module imports and removed unused dependencies
+
 Temporarily commented out:
 - Old feature modules (admin_appointment, calendar, create_doctor, doctors, doctors_list, nostr_notes, room_schedules)
 - local_db module (needs refactoring for salud-types)
 - shared module (depends on Nostr)
 - Nostr integration in main.rs
+
+## Recent Changes (2026-01-23)
+
+### Patient Detail Enhancement
+- **Added encounters list to patient detail view**
+- **Displays all patient encounters (not just scheduled/planned ones)**
+- **Sorted by date (most recent first)**
+- **Shows encounter type, date, time, and status badges**
+- **Click to navigate to encounter detail page**
+- **Loading states with skeleton loaders**
+- **Empty and error states**
+- **Uses the existing `get_by_patient()` method that leverages the database index**
+
+### Technical Improvements
+- **Fixed compilation errors** - Cleaned up complex nested html! macro issues
+- **Removed broken component files** - Deleted encounters_info.rs and contact_info.rs with syntax errors
+- **Component Architecture** - Created simpler inline implementation to avoid complex nested components
+- **Database Optimization** - Confirmed the `by_patient` index exists in database schema
+- **Code Quality** - Fixed borrow checker issues and type safety problems
+
+### Implementation Details
+- **Files Modified**: `dental_intake/src/features/patients/detail.rs`, `dental_intake/src/features/patients/mod.rs`
+- **Component**: Clean inline implementation in patient detail view
+- **Database**: Using existing `by_patient` index from patient_store.rs:73-82
+- **Sorting**: Date-based sorting for encounters (most recent first)
+- **Status Display**: All encounter statuses with appropriate colors and icons
+- **UI/UX**: Spanish localization, responsive design, loading states
 
 ---
 
@@ -205,6 +247,7 @@ Temporarily commented out:
 #### 2. Feature Implementation
 
 **Patients:**
+- ✅ **Patient detail view with encounters display (COMPLETE)**
 - [ ] Implement full patient registration form
   - Name (given, family)
   - Gender selection
@@ -214,8 +257,6 @@ Temporarily commented out:
   - Identifier assignment (auto-generate or manual)
 - [ ] Connect patient list to IDB storage
 - [ ] Implement search functionality (by name, ID)
-- [ ] Implement patient detail view with data
-- [ ] Show encounter history for each patient
 
 **Encounters:**
 - [ ] Implement encounter scheduling form
