@@ -196,19 +196,19 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
     };
 
     html! {
-        <div class="flex flex-col size-full p-4 md:p-8 overflow-auto">
+        <div class="flex flex-col size-full detail-page overflow-auto">
             <div class="max-w-4xl mx-auto w-full">
-                <div class="mb-6">
+                <div class="mb-4">
                     <button
                         onclick={handle_back.clone()}
-                        class="flex items-center gap-2 text-muted hover:text-foreground transition-colors mb-4"
+                        class="flex items-center gap-2 text-muted hover:text-foreground transition-colors mb-3"
                     >
-                        <crate::components::ArrowLeft class="size-5" />
+                        <crate::components::ArrowLeft class="size-4" />
                         {"Volver al Historial"}
                     </button>
 
                     if let Some(enc) = (*encounter).as_ref() {
-                        <h1 class="text-3xl font-bold">
+                        <h1 class="text-2xl font-bold">
                             {"Detalles de la Cita"}
                             {
                                 if let Some(pat) = (*patient).as_ref() {
@@ -218,15 +218,15 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                                 }
                             }
                         </h1>
-                        <p class="text-sm text-muted">{"ID: "}{enc.id.as_ref().unwrap_or(&props.encounter_id)}</p>
+                        <p class="text-xs text-muted">{"ID: "}{enc.id.as_ref().unwrap_or(&props.encounter_id)}</p>
                     } else {
-                        <h1 class="text-3xl font-bold">{"Detalles de la Cita"}</h1>
-                        <p class="text-sm text-muted">{"ID: "}{&props.encounter_id}</p>
+                        <h1 class="text-2xl font-bold">{"Detalles de la Cita"}</h1>
+                        <p class="text-xs text-muted">{"ID: "}{&props.encounter_id}</p>
                     }
                 </div>
 
                 if *is_loading {
-                    <div class="flex items-center justify-center py-12">
+                    <div class="flex items-center justify-center py-8">
                         <div class="flex flex-col items-center gap-4">
                             <div class="size-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                             <p class="text-muted">{"Cargando información de la cita..."}</p>
@@ -246,14 +246,14 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                         </div>
                     </shady_minions::ui::Card>
                 } else if let Some(enc) = (*encounter).as_ref() {
-                    <div class="grid gap-6">
+                    <div class="grid gap-4">
                         // Encounter Information Card
-                        <shady_minions::ui::Card>
-                            <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
-                                <crate::components::Stethoscope class="size-6 text-primary" />
+                        <shady_minions::ui::Card class="detail-card">
+                            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                                <crate::components::Stethoscope class="size-5 text-primary" />
                                 {"Información de la Cita"}
                             </h2>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 // Patient
                                 <div>
                                     <label class="block text-sm font-medium text-muted mb-1">
@@ -454,9 +454,9 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                         }
 
                         // Clinical Impressions Card
-                        <shady_minions::ui::Card>
-                            <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-xl font-semibold">{"Impresiones Clínicas"}</h2>
+                        <shady_minions::ui::Card class="detail-card">
+                            <div class="flex justify-between items-center mb-3">
+                                <h2 class="text-lg font-semibold">{"Impresiones Clínicas"}</h2>
                                 <button
                                     onclick={handle_new_impression}
                                     class="px-3 py-1 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center gap-1"

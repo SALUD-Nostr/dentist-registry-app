@@ -26,17 +26,17 @@ mod storage;
 #[function_component(App)]
 fn app() -> Html {
     html! {
-        <nostr_minions::NostrIdProvider>
+        <yew::suspense::Suspense fallback={html!{<Splash />}}>
+        <nostr_minions::NostrAppProvider>
             <features::login::LoginWrapper>
                 <yew_router::router::BrowserRouter>
-                    <yew::suspense::Suspense fallback={html!{<Splash />}}>
                         <storage::StorageProvider>
                             <router::AppRouter />
                         </storage::StorageProvider>
-                    </yew::suspense::Suspense>
                 </yew_router::router::BrowserRouter>
             </features::login::LoginWrapper>
-        </nostr_minions::NostrIdProvider>
+        </nostr_minions::NostrAppProvider>
+        </yew::suspense::Suspense>
     }
 }
 

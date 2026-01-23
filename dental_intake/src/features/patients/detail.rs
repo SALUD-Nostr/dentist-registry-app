@@ -102,37 +102,37 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
     };
 
     html! {
-        <div class="flex flex-col size-full p-4 md:p-8 overflow-auto">
+        <div class="flex flex-col size-full detail-page overflow-auto">
             <div class="max-w-4xl mx-auto w-full">
-                <div class="mb-6">
+                <div class="mb-4">
                     <button
                         onclick={handle_back.clone()}
-                        class="flex items-center gap-2 text-muted hover:text-foreground transition-colors mb-4"
+                        class="flex items-center gap-2 text-muted hover:text-foreground transition-colors mb-3"
                     >
-                        <crate::components::ArrowLeft class="size-5" />
+                        <crate::components::ArrowLeft class="size-4" />
                         {"Volver a Pacientes"}
                     </button>
 
                     if let Some(p) = (*patient).as_ref() {
-                        <h1 class="text-3xl font-bold">
+                        <h1 class="text-2xl font-bold">
                             {p.full_name().unwrap_or_else(|| "Sin nombre".to_string())}
                         </h1>
-                        <p class="text-sm text-muted">{"ID: "}{&props.patient_id}</p>
+                        <p class="text-xs text-muted">{"ID: "}{&props.patient_id}</p>
                     } else {
-                        <h1 class="text-3xl font-bold">{"Detalles del Paciente"}</h1>
-                        <p class="text-sm text-muted">{"ID: "}{&props.patient_id}</p>
+                        <h1 class="text-2xl font-bold">{"Detalles del Paciente"}</h1>
+                        <p class="text-xs text-muted">{"ID: "}{&props.patient_id}</p>
                     }
                 </div>
 
                 if *is_loading {
-                    <div class="flex items-center justify-center py-12">
+                    <div class="flex items-center justify-center py-8">
                         <div class="flex flex-col items-center gap-4">
                             <div class="size-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                             <p class="text-muted">{"Cargando información del paciente..."}</p>
                         </div>
                     </div>
                 } else if let Some(err) = (*error).as_ref() {
-                    <shady_minions::ui::Card>
+                    <shady_minions::ui::Card class="detail-card">
                         <div class="flex flex-col items-center gap-4 py-12">
                             <crate::components::X class="size-16 text-red-600" />
                             <p class="text-red-600 font-semibold text-lg">{err}</p>
@@ -145,14 +145,14 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                         </div>
                     </shady_minions::ui::Card>
                 } else if let Some(p) = (*patient).as_ref() {
-                    <div class="grid gap-6">
+                    <div class="grid gap-4">
                         // Personal Information Card
-                        <shady_minions::ui::Card>
+                        <shady_minions::ui::Card class="detail-card">
                             <div class="p-6">
                                 <div class="text-2xl font-bold mb-4">
                                     {"Información Personal"}
                                 </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-muted mb-1">{"Nombre Completo"}</label>
                                         <p class="text-base font-medium text-foreground">
@@ -205,9 +205,9 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
 
                         // Contact Information Card
                         if p.telecom.is_some() && !p.telecom.as_ref().unwrap().is_empty() {
-                            <shady_minions::ui::Card>
+                            <shady_minions::ui::Card class="detail-card">
                                 <div class="p-6">
-                                    <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
+                                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
                                         <svg class="size-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                         </svg>
@@ -264,9 +264,9 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
 
                         // Address Information Card
                         if p.address.is_some() && !p.address.as_ref().unwrap().is_empty() {
-                            <shady_minions::ui::Card>
+                            <shady_minions::ui::Card class="detail-card">
                                 <div class="p-6">
-                                    <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
+                                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
                                         <svg class="size-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -317,9 +317,9 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                         }
 
                         // Encounters Card
-                        <shady_minions::ui::Card>
+                        <shady_minions::ui::Card class="detail-card">
                             <div class="p-6">
-                                <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
+                                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
                                     <crate::components::Stethoscope class="size-6 text-primary" />
                                     {"Citas del Paciente"}
                                 </h2>
