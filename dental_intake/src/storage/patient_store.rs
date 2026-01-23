@@ -2,7 +2,7 @@
 
 use gloo_console::log;
 use idb::{
-    Database, DatabaseEvent, Factory, IndexParams, KeyPath, ObjectStoreParams, TransactionMode,
+    Database, Factory, TransactionMode,
 };
 use salud_types::Patient;
 use serde_wasm_bindgen::{from_value, to_value};

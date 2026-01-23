@@ -10,11 +10,10 @@ mod encounter_store;
 mod patient_store;
 
 pub use clinical_impression_store::{
-    ClinicalImpressionStore, ClinicalImpressionStoreProvider, use_clinical_impression_store,
+    ClinicalImpressionStoreProvider, use_clinical_impression_store,
 };
 pub use encounter_store::{EncounterStore, EncounterStoreProvider, use_encounter_store};
 pub use patient_store::{PatientStore, PatientStoreProvider, use_patient_store};
-pub use crate::error::AppError;
 
 /// Database name for all FHIR resources
 pub const DB_NAME: &str = "salud-dental-db";

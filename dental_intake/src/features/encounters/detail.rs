@@ -112,14 +112,14 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
 
     let handle_back = {
         let navigator = navigator.clone();
-        Callback::from(move |_| {
+        Callback::from(move |_: MouseEvent| {
             navigator.push(&crate::router::Route::History);
         })
     };
 
     let handle_new_impression = {
         let encounter_id = props.encounter_id.clone();
-        Callback::from(move |_| {
+        Callback::from(move |_: MouseEvent| {
             navigator.push(&crate::router::Route::ClinicalImpressionNew {
                 encounter_id: encounter_id.clone(),
             });
@@ -131,7 +131,7 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
         let encounter_store = encounter_store.clone();
         let encounter_id = props.encounter_id.clone();
 
-        Callback::from(move |_| {
+        Callback::from(move |_: MouseEvent| {
             let encounter = encounter.clone();
             let encounter_store = encounter_store.clone();
             let encounter_id = encounter_id.clone();
@@ -158,11 +158,12 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
         })
     };
 
-    let handle_mark_cancelled = {
+let handle_mark_cancelled = {
         let encounter = encounter.clone();
+        let encounter_store = encounter_store.clone();
         let encounter_id = props.encounter_id.clone();
 
-        Callback::from(move |_| {
+        Callback::from(move |_: MouseEvent| {
             let encounter = encounter.clone();
             let encounter_store = encounter_store.clone();
             let encounter_id = encounter_id.clone();
@@ -265,8 +266,8 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                         <EncounterDetailCard 
                             encounter={encounter.clone()} 
                             patient={patient.clone()} 
-                            on_mark_cancelled={handle_mark_cancelled.clone()}
-                            on_mark_completed={handle_mark_completed.clone()}
+                            on_mark_cancelled={handle_mark_cancelled}
+                            on_mark_completed={handle_mark_completed}
                         />
 
                         
@@ -352,9 +353,9 @@ struct EncounterDetailCardProps {
     pub encounter: Encounter,
     pub patient: Patient,
     #[prop_or_default]
-    pub on_mark_cancelled: Callback<()>,
+    pub on_mark_cancelled: Callback<MouseEvent>,
     #[prop_or_default]
-    pub on_mark_completed: Callback<()>,
+    pub on_mark_completed: Callback<MouseEvent>,
 }
 
 #[function_component(EncounterDetailCard)]
@@ -375,7 +376,7 @@ fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
                 </h2>
                 {if encounter.status != EncounterStatus::Finished && encounter.status != EncounterStatus::Cancelled {
                     html! {
-                        <div class="flex gap-2">
+<div class="flex gap-2">
                             <button
                                 class="px-3 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2 text-sm"
                                 onclick={props.on_mark_cancelled.clone()}
