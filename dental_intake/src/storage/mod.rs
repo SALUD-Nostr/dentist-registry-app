@@ -5,13 +5,16 @@
 
 use yew::prelude::*;
 
-mod patient_store;
-mod encounter_store;
 mod clinical_impression_store;
+mod encounter_store;
+mod patient_store;
 
-pub use patient_store::{PatientStore, use_patient_store, PatientStoreProvider};
-pub use encounter_store::{EncounterStore, use_encounter_store, EncounterStoreProvider};
-pub use clinical_impression_store::{ClinicalImpressionStore, use_clinical_impression_store, ClinicalImpressionStoreProvider};
+pub use clinical_impression_store::{
+    ClinicalImpressionStore, ClinicalImpressionStoreProvider, use_clinical_impression_store,
+};
+pub use encounter_store::{EncounterStore, EncounterStoreProvider, use_encounter_store};
+pub use patient_store::{PatientStore, PatientStoreProvider, use_patient_store};
+pub use crate::error::AppError;
 
 /// Database name for all FHIR resources
 pub const DB_NAME: &str = "salud-dental-db";

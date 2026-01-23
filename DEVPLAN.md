@@ -1,59 +1,118 @@
-# DEVPLAN
+# Nostr Authentication Re-enablement Strategy
 
-## FHIR Resources 
+**Last Updated:** 2026-01-23  
+**Purpose:** Document the strategy for re-enabling Nostr-based authentication from legacy code into the current FHIR-compliant implementation  
 
-- Patient - https://fhir.hl7.org/fhir/patient.html
-- Encounter - https://fhir.hl7.org/fhir/encounter.html
-- ClinicalImpression - https://fhir.hl7.org/fhir/clinicalimpression.html
+---
 
-## Goals 
+## 🎯 Current State Analysis
 
-- Register patients
-- Schedule encounters for patients 
-- Record clinical impressions
+### What's Currently Working
+- ✅ **FHIR-compliant data models** - Patient, Encounter, ClinicalImpression with proper serialization
+- ✅ **Complete UI implementation** - Patient registration, encounter scheduling, clinical impressions
+- ✅ **IndexedDB storage layer** - Local persistence with no external dependencies
+- ✅ **Modern Yew architecture** - Clean separation of concerns, hooks-based state management
 
-## Screens 
+### What's Commented Out (Legacy Nostr Code)
+The following authentication-related code is currently disabled:
 
-- Patient intake form 
-- Patient List
-- Patient Detail
+#### In `src/main.rs`:
+```rust
+// Lines 59-108: Complete Nostr messaging system
+// - use_send_server_message() hook
+// - encrypt_server_message() function 
+// - NIP44 encryption support
+// - PARAVIDA_PUBKEY integration
+```
 
-- Encounter intake form
-- Encounter Schedule (calendar)
+#### In `src/features/mod.rs`:
+```rust
+// Lines 15-16: Core authentication modules
+// pub mod login;
+// pub mod nostr_notes;
+```
 
-- Clinical Impression intake form (active encounter)
-- Encounter History (completed encounter list)
-- Encounter Detail (clinical impressions)
+#### In `src/router/mod.rs`:
+```rust
+// Lines 37-41: Sync status integration
+// let sync_status = crate::features::nostr_notes::use_sync_status();
+```
 
+### Current Authentication Flow
+**Current State:** No authentication - app runs as local-only
+- Login page exists but is not integrated into router
+- Nostr key management is available but unused
+- App accessible without any credentials
 
-## Current project status
+---
 
-Similar application already built out with Yew and WASM at `dental_intake/` directory.
-Can refactor the app to currrent usecases, keeping the same UI patterns and styles, as
-well as technologies for storage/transmission/authentication.
+## 🔄 Re-enablement Strategy
 
+### Phase 1: Core Authentication Restoration
 
-## Tasks
+#### 1.1 Restore Login Module Integration
+**File:** `src/features/mod.rs`
+```rust
+// Uncomment line 15:
+pub mod login;
+```
 
+**Impact:** Enables the existing Nostr-based login system
 
-### Data Model 
+#### 1.2 Integrate Login Wrapper
+**File:** `src/router/mod.rs` - Add to `AppRouter` component
+```rust
+// Wrap the entire app with LoginWrapper
+#[function_component(AppRouter)]
+pub fn app_router() -> Html {
+    html! {
+        <features::login::LoginWrapper>
+            <div class="flex h-[100vh] w-[100vw] flex-col-reverse md:flex-row">
+                // existing router content
+            </div>
+        </features::login::LoginWrapper>
+    }
+}
+```
 
-- Create structs in `salud-types` for the before mentioned compliant FHIR resources
-- Ensure each struct is serde serializable
-- Ensure each struct has a builder pattern 
+---
 
+## 🔧 Technical Implementation Details
 
-### App refactor
+### Current Login System Architecture
 
-- Refactor the `dental_intake` app to remove routes of old use cases and create new routes for the new usecases
-- Remove dependencies on `paravida-models` and `paravida-components`
-- Keep same UI patterns and styles
+#### Login Provider (`features/login/provider.rs`)
+- Uses `nostr_minions::use_nostr_key()` hook
+- Renders children only when key is present
+- Falls back to `LoginPage` when no key exists
 
-### Storage 
- 
-- Modify the IDB abstractions and methods in `dental_intake` to use the `salud-types` structs
+#### Login Page (`features/login/login_page.rs`)
+- Accepts `nsec` (Nostr secret key) input
+- Uses `nostr_minions::use_create_local_key()` hook
+- Parses nsec into `NostrKeypair`
+- Sets key as extractable for browser storage
 
+### Integration Points with New FHIR System
 
-### UI 
+#### 1. Storage Layer Compatibility
+**Current:** IndexedDB stores FHIR resources directly  
+**Legacy:** IndexedDB stored Nostr notes containing data  
 
-Refactor the app screens to fit current use cases
+**Solution:** 
+
+Add methods to FHIR resources to create Nostr notes:
+
+- d tag with resource id 
+- p tag with user's public key 
+- fhir tag with resource type
+
+Add methods to try parse nostr notes into FHIR resources:
+
+- Use fhir tag to determine resource type if needed
+- Use p tag to determine user's public key if needed
+
+Change stores to store Nostr notes instead of FHIR resources:
+
+- Store notes in IndexedDB
+- Update store getters to parse notes into resources
+

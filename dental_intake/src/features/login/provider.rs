@@ -10,10 +10,7 @@ pub fn login_wrapper(props: &yew::html::ChildrenProps) -> Html {
         }
     } else {
         html! {
-            <>
             <super::LoginPage />
-            <paravida_components::AppLoader />
-            </>
         }
     }
 }

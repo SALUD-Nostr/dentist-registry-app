@@ -3,8 +3,7 @@
 use chrono::{Local, NaiveDate, NaiveDateTime, NaiveTime};
 use gloo_console::log;
 use salud_types::{
-    CodeableConcept, EncounterBuilder, EncounterClass, EncounterStatus, Patient,
-    Period, Reference,
+    CodeableConcept, EncounterBuilder, EncounterClass, EncounterStatus, Patient, Period, Reference,
 };
 use uuid::Uuid;
 use wasm_bindgen_futures::spawn_local;

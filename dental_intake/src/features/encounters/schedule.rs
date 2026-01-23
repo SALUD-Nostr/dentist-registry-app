@@ -143,25 +143,23 @@ fn load_encounters(
     let patient_store = patient_store.clone();
 
     // Get the visible date range from the calendar
-    let view = calendar.view().ok_or(JsValue::from_str("Calendar view not initialized"))?;
+    let view = calendar
+        .view()
+        .ok_or(JsValue::from_str("Calendar view not initialized"))?;
 
     let start = view
         .active_start()
         .and_then(|s| {
-            DateTime::parse_from_rfc3339(
-                s.to_iso_string().as_string().unwrap_or_default().as_str(),
-            )
-            .ok()
+            DateTime::parse_from_rfc3339(s.to_iso_string().as_string().unwrap_or_default().as_str())
+                .ok()
         })
         .ok_or(JsValue::from_str("Failed to get start date"))?;
 
     let end = view
         .active_end()
         .and_then(|s| {
-            DateTime::parse_from_rfc3339(
-                s.to_iso_string().as_string().unwrap_or_default().as_str(),
-            )
-            .ok()
+            DateTime::parse_from_rfc3339(s.to_iso_string().as_string().unwrap_or_default().as_str())
+                .ok()
         })
         .ok_or(JsValue::from_str("Failed to get end date"))?;
 
@@ -177,7 +175,10 @@ fn load_encounters(
                 JsValue::from_str(&format!("{:?}", e))
             })?;
 
-            log!("Loaded encounters:", format!("{} total", all_encounters.len()));
+            log!(
+                "Loaded encounters:",
+                format!("{} total", all_encounters.len())
+            );
 
             // Filter for planned encounters in the visible range
             let mut filtered_encounters = Vec::new();
@@ -191,14 +192,19 @@ fn load_encounters(
                 if let Some(period) = &encounter.period {
                     if let Some(encounter_start) = period.start {
                         let start_utc: DateTime<Utc> = encounter_start.into();
-                        if start_utc >= start.with_timezone(&Utc) && start_utc <= end.with_timezone(&Utc) {
+                        if start_utc >= start.with_timezone(&Utc)
+                            && start_utc <= end.with_timezone(&Utc)
+                        {
                             filtered_encounters.push(encounter);
                         }
                     }
                 }
             }
 
-            log!("Filtered encounters:", format!("{} in range and planned", filtered_encounters.len()));
+            log!(
+                "Filtered encounters:",
+                format!("{} in range and planned", filtered_encounters.len())
+            );
 
             // Load patient names for the encounters
             let mut events_with_patients = Vec::new();
@@ -208,7 +214,9 @@ fn load_encounters(
                     let patient_id = ref_str.strip_prefix("Patient/").unwrap_or(ref_str);
 
                     match patient_store.get(patient_id).await {
-                        Ok(Some(patient)) => patient.full_name().unwrap_or_else(|| "Paciente".to_string()),
+                        Ok(Some(patient)) => patient
+                            .full_name()
+                            .unwrap_or_else(|| "Paciente".to_string()),
                         _ => "Paciente".to_string(),
                     }
                 } else {
@@ -226,7 +234,9 @@ fn load_encounters(
                 for (encounter, patient_name) in events_with_patients {
                     if let Some(period) = &encounter.period {
                         if let (Some(start), Some(end)) = (period.start, period.end) {
-                            let title = format!("{} - {}", patient_name,
+                            let title = format!(
+                                "{} - {}",
+                                patient_name,
                                 match &encounter.class {
                                     salud_types::EncounterClass::Ambulatory => "Consulta",
                                     salud_types::EncounterClass::Emergency => "Emergencia",
@@ -240,12 +250,12 @@ fn load_encounters(
 
                             let color = match &encounter.class {
                                 salud_types::EncounterClass::Ambulatory => "#3b82f6", // blue
-                                salud_types::EncounterClass::Emergency => "#ef4444", // red
+                                salud_types::EncounterClass::Emergency => "#ef4444",  // red
                                 salud_types::EncounterClass::HomeHealth => "#10b981", // green
-                                salud_types::EncounterClass::Virtual => "#8b5cf6", // purple
-                                salud_types::EncounterClass::Field => "#f59e0b", // amber
-                                salud_types::EncounterClass::Inpatient => "#06b6d4", // cyan
-                                salud_types::EncounterClass::Acute => "#ec4899", // pink
+                                salud_types::EncounterClass::Virtual => "#8b5cf6",    // purple
+                                salud_types::EncounterClass::Field => "#f59e0b",      // amber
+                                salud_types::EncounterClass::Inpatient => "#06b6d4",  // cyan
+                                salud_types::EncounterClass::Acute => "#ec4899",      // pink
                             };
 
                             let event = yew_full_calendar::EventBuilder::default()

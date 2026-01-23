@@ -24,10 +24,9 @@ impl ClinicalImpressionStore {
 
     /// Save a clinical impression to the database
     pub async fn save(&self, impression: &ClinicalImpression) -> Result<(), AppError> {
-        let tx = self.db.transaction(
-            &[stores::CLINICAL_IMPRESSIONS],
-            TransactionMode::ReadWrite,
-        )?;
+        let tx = self
+            .db
+            .transaction(&[stores::CLINICAL_IMPRESSIONS], TransactionMode::ReadWrite)?;
 
         let store = tx.object_store(stores::CLINICAL_IMPRESSIONS)?;
 
@@ -47,10 +46,9 @@ impl ClinicalImpressionStore {
 
     /// Get a clinical impression by ID
     pub async fn get(&self, id: &str) -> Result<Option<ClinicalImpression>, AppError> {
-        let tx = self.db.transaction(
-            &[stores::CLINICAL_IMPRESSIONS],
-            TransactionMode::ReadOnly,
-        )?;
+        let tx = self
+            .db
+            .transaction(&[stores::CLINICAL_IMPRESSIONS], TransactionMode::ReadOnly)?;
 
         let store = tx.object_store(stores::CLINICAL_IMPRESSIONS)?;
 
@@ -67,10 +65,9 @@ impl ClinicalImpressionStore {
 
     /// Get all clinical impressions
     pub async fn get_all(&self) -> Result<Vec<ClinicalImpression>, AppError> {
-        let tx = self.db.transaction(
-            &[stores::CLINICAL_IMPRESSIONS],
-            TransactionMode::ReadOnly,
-        )?;
+        let tx = self
+            .db
+            .transaction(&[stores::CLINICAL_IMPRESSIONS], TransactionMode::ReadOnly)?;
 
         let store = tx.object_store(stores::CLINICAL_IMPRESSIONS)?;
 
@@ -86,7 +83,10 @@ impl ClinicalImpressionStore {
     }
 
     /// Get clinical impressions for a specific encounter
-    pub async fn get_by_encounter(&self, encounter_id: &str) -> Result<Vec<ClinicalImpression>, AppError> {
+    pub async fn get_by_encounter(
+        &self,
+        encounter_id: &str,
+    ) -> Result<Vec<ClinicalImpression>, AppError> {
         let all_impressions = self.get_all().await?;
 
         let encounter_ref = format!("Encounter/{}", encounter_id);
@@ -107,10 +107,9 @@ impl ClinicalImpressionStore {
 
     /// Delete a clinical impression by ID
     pub async fn delete(&self, id: &str) -> Result<(), AppError> {
-        let tx = self.db.transaction(
-            &[stores::CLINICAL_IMPRESSIONS],
-            TransactionMode::ReadWrite,
-        )?;
+        let tx = self
+            .db
+            .transaction(&[stores::CLINICAL_IMPRESSIONS], TransactionMode::ReadWrite)?;
 
         let store = tx.object_store(stores::CLINICAL_IMPRESSIONS)?;
 

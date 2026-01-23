@@ -8,7 +8,7 @@ use std::rc::Rc;
 use wasm_bindgen::JsValue;
 use yew::prelude::*;
 
-use super::{stores, PatientStore};
+use super::{PatientStore, stores};
 use crate::error::AppError;
 
 #[derive(Clone)]

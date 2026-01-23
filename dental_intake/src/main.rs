@@ -19,20 +19,24 @@ mod components;
 mod constants;
 mod error;
 mod features;
-mod storage;
 mod router;
+mod storage;
 // pub(crate) mod shared; // TODO: Re-enable after Nostr integration restored
 
 #[function_component(App)]
 fn app() -> Html {
     html! {
-        <yew_router::router::BrowserRouter>
-            <yew::suspense::Suspense fallback={html!{<Splash />}}>
-                <storage::StorageProvider>
-                    <router::AppRouter />
-                </storage::StorageProvider>
-            </yew::suspense::Suspense>
-        </yew_router::router::BrowserRouter>
+        <nostr_minions::NostrIdProvider>
+            <features::login::LoginWrapper>
+                <yew_router::router::BrowserRouter>
+                    <yew::suspense::Suspense fallback={html!{<Splash />}}>
+                        <storage::StorageProvider>
+                            <router::AppRouter />
+                        </storage::StorageProvider>
+                    </yew::suspense::Suspense>
+                </yew_router::router::BrowserRouter>
+            </features::login::LoginWrapper>
+        </nostr_minions::NostrIdProvider>
     }
 }
 

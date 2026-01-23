@@ -1,19 +1,21 @@
 //! Patient storage using IndexedDB
 
 use gloo_console::log;
-use idb::{Database, DatabaseEvent, Factory, IndexParams, KeyPath, ObjectStoreParams, TransactionMode};
+use idb::{
+    Database, DatabaseEvent, Factory, IndexParams, KeyPath, ObjectStoreParams, TransactionMode,
+};
 use salud_types::Patient;
 use serde_wasm_bindgen::{from_value, to_value};
 use std::rc::Rc;
 use wasm_bindgen::JsValue;
 use yew::prelude::*;
 
-use super::{stores, DB_NAME, DB_VERSION};
+use super::{DB_NAME, DB_VERSION, stores};
 use crate::error::AppError;
 
 #[derive(Clone)]
 pub struct PatientStore {
-    pub(super) db: Rc<Database>,
+    pub db: Rc<Database>,
 }
 
 impl PatientStore {
@@ -33,45 +35,78 @@ impl PatientStore {
             };
 
             // Create patients object store if it doesn't exist
-            if !database.store_names().iter().any(|name| name == stores::PATIENTS) {
-                if let Ok(store) = database.create_object_store(stores::PATIENTS, idb::ObjectStoreParams::new()) {
+            if !database
+                .store_names()
+                .iter()
+                .any(|name| name == stores::PATIENTS)
+            {
+                if let Ok(store) =
+                    database.create_object_store(stores::PATIENTS, idb::ObjectStoreParams::new())
+                {
                     let mut params = idb::IndexParams::new();
                     params.unique(true);
-                    if let Err(e) = store.create_index("by_id", idb::KeyPath::new_single("id"), Some(params)) {
+                    if let Err(e) =
+                        store.create_index("by_id", idb::KeyPath::new_single("id"), Some(params))
+                    {
                         gloo_console::error!("Error creating index:", format!("{:?}", e));
                     }
                 }
             }
 
             // Create encounters object store
-            if !database.store_names().iter().any(|name| name == stores::ENCOUNTERS) {
-                if let Ok(store) = database.create_object_store(stores::ENCOUNTERS, idb::ObjectStoreParams::new()) {
+            if !database
+                .store_names()
+                .iter()
+                .any(|name| name == stores::ENCOUNTERS)
+            {
+                if let Ok(store) =
+                    database.create_object_store(stores::ENCOUNTERS, idb::ObjectStoreParams::new())
+                {
                     let mut id_params = idb::IndexParams::new();
                     id_params.unique(true);
-                    if let Err(e) = store.create_index("by_id", idb::KeyPath::new_single("id"), Some(id_params)) {
+                    if let Err(e) =
+                        store.create_index("by_id", idb::KeyPath::new_single("id"), Some(id_params))
+                    {
                         gloo_console::error!("Error creating index:", format!("{:?}", e));
                     }
 
                     let mut patient_params = idb::IndexParams::new();
                     patient_params.unique(false);
-                    if let Err(e) = store.create_index("by_patient", idb::KeyPath::new_single("subject.reference"), Some(patient_params)) {
+                    if let Err(e) = store.create_index(
+                        "by_patient",
+                        idb::KeyPath::new_single("subject.reference"),
+                        Some(patient_params),
+                    ) {
                         gloo_console::error!("Error creating index:", format!("{:?}", e));
                     }
                 }
             }
 
             // Create clinical impressions object store
-            if !database.store_names().iter().any(|name| name == stores::CLINICAL_IMPRESSIONS) {
-                if let Ok(store) = database.create_object_store(stores::CLINICAL_IMPRESSIONS, idb::ObjectStoreParams::new()) {
+            if !database
+                .store_names()
+                .iter()
+                .any(|name| name == stores::CLINICAL_IMPRESSIONS)
+            {
+                if let Ok(store) = database.create_object_store(
+                    stores::CLINICAL_IMPRESSIONS,
+                    idb::ObjectStoreParams::new(),
+                ) {
                     let mut id_params = idb::IndexParams::new();
                     id_params.unique(true);
-                    if let Err(e) = store.create_index("by_id", idb::KeyPath::new_single("id"), Some(id_params)) {
+                    if let Err(e) =
+                        store.create_index("by_id", idb::KeyPath::new_single("id"), Some(id_params))
+                    {
                         gloo_console::error!("Error creating index:", format!("{:?}", e));
                     }
 
                     let mut encounter_params = idb::IndexParams::new();
                     encounter_params.unique(false);
-                    if let Err(e) = store.create_index("by_encounter", idb::KeyPath::new_single("encounter.reference"), Some(encounter_params)) {
+                    if let Err(e) = store.create_index(
+                        "by_encounter",
+                        idb::KeyPath::new_single("encounter.reference"),
+                        Some(encounter_params),
+                    ) {
                         gloo_console::error!("Error creating index:", format!("{:?}", e));
                     }
                 }
@@ -226,7 +261,10 @@ pub fn patient_store_provider(props: &PatientStoreProviderProps) -> Html {
                         store.set(Some(Rc::new(db)));
                     }
                     Err(e) => {
-                        gloo_console::error!("Failed to initialize patient store:", format!("{:?}", e));
+                        gloo_console::error!(
+                            "Failed to initialize patient store:",
+                            format!("{:?}", e)
+                        );
                     }
                 }
             });

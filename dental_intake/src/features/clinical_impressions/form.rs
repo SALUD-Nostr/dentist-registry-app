@@ -210,21 +210,18 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
                 }
 
                 match builder.build() {
-                    Ok(impression) => {
-                        match clinical_impression_store.save(&impression).await {
-                            Ok(_) => {
-                                log!("Clinical impression saved successfully");
-                                navigator.push(&crate::router::Route::EncounterDetail {
-                                    id: encounter_id,
-                                });
-                            }
-                            Err(e) => {
-                                log!("Error saving clinical impression:", format!("{:?}", e));
-                                errors.set(vec![format!("Error al guardar: {:?}", e)]);
-                                is_saving.set(false);
-                            }
+                    Ok(impression) => match clinical_impression_store.save(&impression).await {
+                        Ok(_) => {
+                            log!("Clinical impression saved successfully");
+                            navigator
+                                .push(&crate::router::Route::EncounterDetail { id: encounter_id });
                         }
-                    }
+                        Err(e) => {
+                            log!("Error saving clinical impression:", format!("{:?}", e));
+                            errors.set(vec![format!("Error al guardar: {:?}", e)]);
+                            is_saving.set(false);
+                        }
+                    },
                     Err(e) => {
                         log!("Error building clinical impression:", format!("{:?}", e));
                         errors.set(vec![format!("Error al crear impresión: {:?}", e)]);

@@ -2,7 +2,10 @@
 
 use chrono::Timelike;
 use gloo_console::log;
-use salud_types::{ClinicalImpression, ClinicalImpressionStatus, Encounter, EncounterClass, EncounterStatus, Patient};
+use salud_types::{
+    ClinicalImpression, ClinicalImpressionStatus, Encounter, EncounterClass, EncounterStatus,
+    Patient,
+};
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -94,7 +97,10 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                 log!("Loading clinical impressions for encounter:", id.as_str());
                 match clinical_impression_store.get_by_encounter(&id).await {
                     Ok(impressions) => {
-                        log!("Clinical impressions loaded:", format!("{} impressions", impressions.len()));
+                        log!(
+                            "Clinical impressions loaded:",
+                            format!("{} impressions", impressions.len())
+                        );
                         clinical_impressions.set(impressions);
                         is_loading_impressions.set(false);
                     }
@@ -143,7 +149,8 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                         Ok(_) => {
                             log!("Encounter marked as completed");
                             // Reload the encounter
-                            if let Ok(Some(updated_enc)) = encounter_store.get(&encounter_id).await {
+                            if let Ok(Some(updated_enc)) = encounter_store.get(&encounter_id).await
+                            {
                                 encounter.set(Some(updated_enc));
                             }
                         }
@@ -174,7 +181,8 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                         Ok(_) => {
                             log!("Encounter marked as cancelled");
                             // Reload the encounter
-                            if let Ok(Some(updated_enc)) = encounter_store.get(&encounter_id).await {
+                            if let Ok(Some(updated_enc)) = encounter_store.get(&encounter_id).await
+                            {
                                 encounter.set(Some(updated_enc));
                             }
                         }

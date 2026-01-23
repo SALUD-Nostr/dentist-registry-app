@@ -1,3 +1,4 @@
+use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
 #[function_component(LoginPage)]
@@ -9,7 +10,7 @@ pub fn login_page() -> Html {
     let on_nsec_input = {
         let nsec = nsec.clone();
         Callback::from(move |e: InputEvent| {
-            let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+            let input: HtmlInputElement = e.target_unchecked_into();
             nsec.set(input.value());
         })
     };
@@ -23,6 +24,7 @@ pub fn login_page() -> Html {
 
             let nsec_value = (*nsec).clone();
 
+            // Validate and create Nostr keypair
             match nsec_value.parse::<nostr_minions::nostro2_signer::keypair::NostrKeypair>() {
                 Ok(mut keypair) => {
                     keypair.set_extractable(true);
@@ -36,45 +38,55 @@ pub fn login_page() -> Html {
     };
 
     html! {
-        <div class="flex h-screen w-screen items-center justify-center bg-muted/10">
-            <paravida_components::Card class="max-w-md">
-                <div class="flex flex-col items-center gap-4">
-                    <paravida_components::icons::ParavidaLogo class="size-16" />
-                    <paravida_components::typography::H2>{"Panel de Administración"}</paravida_components::typography::H2>
-                    <paravida_components::typography::P class="text-center text-muted">
-                        {"Ingresa tu clave privada (nsec) para acceder"}
-                    </paravida_components::typography::P>
+        <div class="flex h-screen w-screen items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
+            <shady_minions::ui::Card class="w-full max-w-md p-8">
+                <div class="flex flex-col items-center gap-6 mb-6">
+                    <crate::components::Logo class="size-20 text-primary" />
+                    <div class="text-center">
+                        <h1 class="text-2xl font-bold text-foreground mb-2">
+                            {"Salud Dental"}
+                        </h1>
+                        <p class="text-sm text-muted-foreground">
+                            {"Ingresa tu clave privada (nsec) para acceder"}
+                        </p>
+                    </div>
                 </div>
 
                 <form onsubmit={on_submit} class="flex flex-col gap-4">
                     <div class="flex flex-col gap-2">
-                        <label for="nsec" class="text-sm font-medium">
+                        <label for="nsec" class="text-sm font-medium text-foreground">
                             {"Clave Privada (nsec)"}
                         </label>
-                        <paravida_components::inputs::Input
+                        <input
                             id="nsec"
-                            input_type="password"
+                            type="password"
                             placeholder="nsec1..."
                             value={(*nsec).clone()}
                             oninput={on_nsec_input}
+                            class="px-3 py-2 border border-input rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                         />
                     </div>
 
                     if let Some(error_msg) = (*error).clone() {
-                        <paravida_components::alerts::Alert variant="error">
+                        <div class="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm">
                             { error_msg }
-                        </paravida_components::alerts::Alert>
+                        </div>
                     }
 
-                    <paravida_components::buttons::Button
-                        button_type="submit"
-                        variant="primary"
-                        class="w-full"
+                    <button
+                        type="submit"
+                        class="px-4 py-2 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
                     >
                         {"Iniciar Sesión"}
-                    </paravida_components::buttons::Button>
+                    </button>
                 </form>
-            </paravida_components::Card>
+
+                <div class="mt-6 pt-6 border-t border-border text-center">
+                    <p class="text-xs text-muted-foreground">
+                        {"Tu clave privada se almacena de forma segura en tu navegador"}
+                    </p>
+                </div>
+            </shady_minions::ui::Card>
         </div>
     }
 }

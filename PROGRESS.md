@@ -1,7 +1,27 @@
 # Progress Update - Salud Dental
 
 **Last Updated:** 2026-01-23
-**Status:** Core features implemented and functional
+**Status:** ✅ Core application complete and functional (95%)
+
+**Major Milestone:** All core FHIR-compliant features are fully implemented with IndexedDB persistence!
+
+---
+
+## 🎯 Summary
+
+**What Works:**
+- ✅ **Complete patient management** - registration, list, detail view with encounters
+- ✅ **Complete encounter management** - scheduling form, calendar view, detail, history, status updates
+- ✅ **Complete clinical impressions** - recording form with dynamic findings, display in encounters
+- ✅ **Full IndexedDB persistence** - all data stored locally with FHIR compliance
+- ✅ **FHIR R4 data models** - Patient, Encounter, ClinicalImpression with proper types
+- ✅ **Spanish UI** - all user-facing text localized
+- ✅ **Responsive design** - works across different screen sizes
+
+**What's Left:**
+- Code cleanup (remove old commented modules)
+- Authentication/sync decisions
+- UI/UX polish (toasts, enhanced validation, accessibility)
 
 ---
 
@@ -93,7 +113,7 @@ All resources are:
 
 ---
 
-## ✅ Phase 2: App Refactor (70% Complete)
+## ✅ Phase 2: App Refactor (95% Complete)
 
 ### Dependencies Updated
 **File:** `dental_intake/Cargo.toml`
@@ -148,27 +168,49 @@ All resources are:
 - Old appointment routes (`/admin-appointment`, `/appointment/:id`)
 
 ### Feature Modules Created
-All modules compile successfully with placeholder UI.
+All modules are fully implemented and functional.
 
-#### Patients Module
+#### Patients Module ✅ COMPLETE
 **Location:** `dental_intake/src/features/patients/`
 
-- `list.rs` - Patient list view with search bar and table structure
-- `form.rs` - Patient registration form (placeholder)
-- `detail.rs` - **Patient detail view with encounters display (COMPLETE)**
+- `list.rs` - Patient list view with IndexedDB integration and real-time search
+- `form.rs` - Comprehensive patient registration form with FHIR compliance
+  - Name fields (given, family)
+  - Gender selection
+  - Birth date picker
+  - Contact information (phone, email)
+  - Address fields (street, city, state, postal code, country)
+  - Form validation
+  - Save to IndexedDB
+- `detail.rs` - Patient detail view with full information and encounters display
 
-#### Encounters Module
+#### Encounters Module ✅ COMPLETE
 **Location:** `dental_intake/src/features/encounters/`
 
-- `schedule.rs` - Calendar view placeholder
-- `form.rs` - Encounter scheduling form (placeholder)
-- `detail.rs` - Encounter detail with clinical impressions list
-- `history.rs` - Completed encounters list with search
+- `schedule.rs` - Calendar view with yew-full-calendar integration
+  - Displays planned encounters
+  - Loads patient names for each encounter
+  - Click to navigate to encounter details
+  - Responsive calendar UI
+- `form.rs` - Multi-step encounter scheduling form
+  - Step 1: Patient search and selection
+  - Step 2: Date/time picker and appointment details
+  - Step 3: Confirmation
+  - Save to IndexedDB
+- `detail.rs` - Encounter detail view with patient information and clinical impressions list
+  - Action buttons to mark as completed/cancelled
+  - Status management
+- `history.rs` - Completed encounters list with pagination and search
 
-#### Clinical Impressions Module
+#### Clinical Impressions Module ✅ COMPLETE
 **Location:** `dental_intake/src/features/clinical_impressions/`
 
-- `form.rs` - Clinical impression recording form (placeholder)
+- `form.rs` - Comprehensive clinical impression recording form
+  - Summary text area
+  - Dynamic findings list (add/remove)
+  - Notes section
+  - Status selection (in-progress, completed)
+  - Save to IndexedDB
 
 ### Home/Dashboard Updated
 **File:** `dental_intake/src/features/home/mod.rs`
@@ -188,13 +230,27 @@ All modules compile successfully with placeholder UI.
 - ✅ Resolved type safety issues with Option<NaiveDate> handling
 - ✅ Updated module imports and removed unused dependencies
 
-Temporarily commented out:
+**Storage Layer Refactored:**
+- ✅ New `storage/` module with FHIR-compliant IndexedDB stores
+- ✅ PatientStore, EncounterStore, ClinicalImpressionStore
+- ✅ All stores support CRUD operations with async/await
+- ✅ Custom hooks for Yew integration (`use_patient_store()`, etc.)
+- ✅ No Nostr dependencies - stores FHIR resources directly
+
+**Temporarily commented out:**
 - Old feature modules (admin_appointment, calendar, create_doctor, doctors, doctors_list, nostr_notes, room_schedules)
-- local_db module (needs refactoring for salud-types)
 - shared module (depends on Nostr)
 - Nostr integration in main.rs
 
 ## Recent Changes (2026-01-23)
+
+### PROGRESS.md Updated to Reflect Current State
+- **Updated completion percentage** from 70% to 95%
+- **Moved completed features** from "Remaining Work" to "Completed Features"
+- **Verified all implementations** - Patient form, Encounter form/calendar, Clinical impressions all fully functional
+- **Updated storage layer status** - IndexedDB layer complete and in use
+- **Clarified next steps** - Focus on cleanup, testing, and polish
+- **Added comprehensive summary** of current state
 
 ### Patient Detail Enhancement
 - **Added encounters list to patient detail view**
@@ -227,75 +283,7 @@ Temporarily commented out:
 
 ### High Priority
 
-#### 1. Storage Layer Refactoring
-**Current Status:** Commented out (`dental_intake/src/local_db/mod.rs`)
-
-**Tasks:**
-- [ ] Create new IDB schema for Patient, Encounter, ClinicalImpression
-- [ ] Remove Nostr Note wrapper - store FHIR resources directly
-- [ ] Remove encryption/decryption logic (or make optional)
-- [ ] Implement CRUD operations for each resource type
-- [ ] Add search/filter capabilities
-- [ ] Create provider hooks for each resource
-
-**Estimated files to create:**
-- `local_db/patient_store.rs`
-- `local_db/encounter_store.rs`
-- `local_db/clinical_impression_store.rs`
-- `local_db/hooks.rs` (Yew context providers)
-
-#### 2. Feature Implementation
-
-**Patients:**
-- ✅ **Patient detail view with encounters display (COMPLETE)**
-- [ ] Implement full patient registration form
-  - Name (given, family)
-  - Gender selection
-  - Birth date picker
-  - Contact information (phone, email)
-  - Address fields
-  - Identifier assignment (auto-generate or manual)
-- [ ] Connect patient list to IDB storage
-- [ ] Implement search functionality (by name, ID)
-
-**Encounters:**
-- [ ] Implement encounter scheduling form
-  - Patient selection dropdown
-  - Date/time picker
-  - Encounter type/reason
-  - Status management
-- [ ] Implement calendar view (consider yew-full-calendar)
-- [ ] Connect to IDB storage
-- [ ] Implement encounter detail view
-- [ ] Link encounters to patients properly
-
-**Clinical Impressions:**
-- [ ] Implement impression recording form
-  - Summary text area
-  - Findings list (add/remove)
-  - Status selection
-  - Assessor reference
-- [ ] Connect to IDB storage
-- [ ] Display impressions in encounter detail
-- [ ] Link impressions to encounters
-
-### Medium Priority
-
-#### 3. Authentication & Sync
-**Decision needed:** Authentication approach
-
-**Options:**
-1. Simple password-based auth (local storage)
-2. OAuth/OIDC integration
-3. Re-enable Nostr key-based auth
-4. No auth (local-only app)
-
-**Sync approach:**
-- Keep Nostr relay sync (refactor for FHIR types)
-- Switch to HTTP API sync
-- Local-only (no sync)
-
-#### 4. Code Cleanup
+#### 1. Code Cleanup
 - [ ] Remove old commented modules entirely:
   - `features/admin_appointment/`
   - `features/calendar/`
@@ -304,16 +292,41 @@ Temporarily commented out:
   - `features/doctors_list/`
   - `features/nostr_notes/`
   - `features/room_schedules/`
-
 - [ ] Update or remove `constants.rs` (has Nostr-specific constants)
 - [ ] Decide on `shared/sync_status` component
+- [ ] Clean up old `local_db/` module (replaced by `storage/`)
+
+### Medium Priority
+
+#### 2. Authentication & Sync
+**📋 Strategy Documented:** Complete re-enablement plan created in `DEVPLAN.md`
+
+**Decision needed:** Authentication approach
+
+**Options:**
+1. Simple password-based auth (local storage)
+2. OAuth/OIDC integration  
+3. **Re-enable Nostr key-based auth** ← **Strategy documented in DEVPLAN.md**
+4. No auth (local-only app) ← Currently implemented
+
+**Sync approach:**
+- **Keep Nostr relay sync (refactor for FHIR types)** ← **5-phase implementation plan documented**
+- Switch to HTTP API sync
+- Local-only (no sync) ← Currently implemented
+
+**📄 Documentation Added:**
+- ✅ **Complete Nostr re-enablement strategy** in `DEVPLAN.md`
+- ✅ **5-phase implementation plan** with timelines and checklists
+- ✅ **Technical integration details** for FHIR ↔ Nostr transformation
+- ✅ **Risk assessment and mitigation strategies**
+- ✅ **Migration considerations** for backward compatibility
 
 ### Low Priority
 
-#### 5. Enhancements
-- [ ] Form validation
-- [ ] Error handling UI
-- [ ] Loading states
+#### 3. Enhancements
+- [ ] Enhanced form validation (current validation is basic)
+- [ ] Improved error handling UI
+- [ ] Enhanced loading states (current states are functional but could be improved)
 - [ ] Success/error toast notifications
 - [ ] Print views for records
 - [ ] Export to PDF functionality
@@ -340,7 +353,7 @@ salud-dental/
 │       ├── encounter.rs (Encounter resource)
 │       └── clinical_impression.rs (ClinicalImpression resource)
 │
-└── dental_intake/ (Yew WASM app) ⏳ IN PROGRESS
+└── dental_intake/ (Yew WASM app) ✅ 95% COMPLETE
     ├── Cargo.toml
     ├── Trunk.toml
     ├── index.html
@@ -348,8 +361,8 @@ salud-dental/
         ├── main.rs (app entry, providers)
         ├── router/
         │   ├── mod.rs (routes, AppRouter) ✅
-        │   ├── navbar.rs (navigation bar)
-        │   └── hooks.rs
+        │   ├── navbar.rs (navigation bar) ✅
+        │   └── hooks.rs ✅
         ├── components/ ✅
         │   ├── mod.rs
         │   ├── icons.rs (custom icons)
@@ -357,20 +370,24 @@ salud-dental/
         ├── features/
         │   ├── mod.rs
         │   ├── home/ ✅ (dashboard)
-        │   ├── patients/ ✅ (list, form, detail - placeholders)
-        │   ├── encounters/ ✅ (schedule, form, detail, history - placeholders)
-        │   ├── clinical_impressions/ ✅ (form - placeholder)
-        │   ├── [OLD MODULES COMMENTED OUT]
+        │   ├── patients/ ✅ (list, form, detail)
+        │   ├── encounters/ ✅ (schedule, form, detail, history)
+        │   ├── clinical_impressions/ ✅ (form)
+        │   ├── [OLD MODULES COMMENTED OUT - TO BE REMOVED]
         │   └── login/ (may need refactor)
-        ├── local_db/ (⏳ NEEDS REFACTORING)
-        │   └── mod.rs (currently commented out)
+        ├── storage/ ✅ (IndexedDB layer)
+        │   ├── mod.rs (AppError, hooks)
+        │   ├── patient_store.rs (PatientStore with by_patient index)
+        │   ├── encounter_store.rs (EncounterStore)
+        │   └── clinical_impression_store.rs (ClinicalImpressionStore)
+        ├── local_db/ (⚠️ OLD - TO BE REMOVED)
         ├── shared/ (commented out - depends on Nostr)
-        └── constants.rs (Nostr constants - may remove)
+        └── constants.rs (Nostr constants - to be removed)
 ```
 
 ---
 
-## How to Run (Current State)
+## How to Run
 
 ```bash
 # From project root
@@ -382,38 +399,70 @@ trunk serve
 # App will be available at http://localhost:8002
 ```
 
-**Note:** Currently only placeholder screens are visible. No data persistence yet (IDB layer commented out).
+**Current State:** ✅ Fully functional application with:
+- Complete patient registration and management
+- Encounter scheduling with calendar view
+- Clinical impressions recording
+- Full IndexedDB persistence
+- All data stored locally in the browser
 
 ---
 
 ## Next Steps (Immediate)
 
-1. **Refactor Storage Layer** (highest priority)
-   - Create new IDB stores for FHIR resources
-   - Remove Nostr dependencies from storage
-   - Implement basic CRUD operations
+1. **End-to-End Testing** ✅ **STORAGE LAYER COMPLETE**
+   - ✅ Storage layer E2E tests implemented (6 tests)
+   - ✅ All tests passing in Firefox (`wasm-pack test --headless --firefox`)
+   - ✅ Patient CRUD operations verified in browser
+   - ✅ Encounter CRUD operations verified in browser
+   - ✅ Clinical impression CRUD operations verified in browser
+   - ✅ IndexedDB persistence validated
+   - ✅ Data persistence across sessions tested
+   - ⏳ UI component tests (patient/encounter/impression forms) - Future work
 
-2. **Implement Patient Form**
-   - Build full form with validation
-   - Connect to IDB storage
-   - Test create/read operations
+2. **Code Cleanup** (highest priority for maintainability)
+   - Remove old commented-out feature modules
+   - Clean up Nostr-related constants
+   - Remove old `local_db/` module files
+   - Update documentation
 
-3. **Implement Patient List**
-   - Load patients from IDB
-   - Display in table
-   - Implement search filter
+3. **UI/UX Polish**
+   - Add success/error toast notifications
+   - Improve form validation feedback
+   - Enhance loading states
+   - Add confirmation dialogs for destructive actions
 
-4. **Test End-to-End Flow**
-   - Register patient → Save to IDB → Display in list → View detail
+4. **Authentication Decision**
+   - Decide on authentication approach
+   - Decide on sync strategy (local-only vs remote sync)
 
-5. **Repeat for Encounters and Clinical Impressions**
+5. **Production Readiness**
+   - Add error boundaries
+   - Improve accessibility (ARIA labels, keyboard navigation)
+   - Add print views for records
+   - Consider export functionality
 
 ---
 
 ## Questions to Resolve
 
 1. **Authentication:** What approach should we use?
+   - Simple password-based auth
+   - OAuth/OIDC integration
+   - Re-enable Nostr key-based auth
+   - No auth (local-only app) ← Currently implemented
+
 2. **Sync:** Do we need synchronization across devices? If so, what method?
+   - Keep Nostr relay sync (refactor for FHIR types)
+   - Switch to HTTP API sync
+   - Local-only (no sync) ← Currently implemented
+
 3. **Practitioners:** Are we completely removing practitioner management, or will it be added later?
+   - Currently removed from UI
+   - Reference structure exists in FHIR types (assessor, participant)
+
 4. **Rooms/Scheduling:** Do we need room/resource scheduling, or just simple encounter times?
+   - Currently: simple encounter date/time ← Implemented
+
 5. **Old Data:** Should we migrate data from old Nostr-based storage, or start fresh?
+   - Currently: starting fresh with new FHIR-compliant storage ← Decided

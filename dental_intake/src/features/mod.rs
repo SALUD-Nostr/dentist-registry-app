@@ -3,6 +3,12 @@ pub mod clinical_impressions;
 pub mod encounters;
 pub mod patients;
 
+// Authentication
+pub mod login;
+
+// Keep for now
+pub mod home;
+
 // Old modules (temporarily disabled to get app compiling)
 // TODO: Refactor or remove these modules
 // pub mod admin_appointment;
@@ -11,7 +17,5 @@ pub mod patients;
 // pub mod doctors;
 // pub mod doctors_list;
 // pub mod history;
-pub mod home; // Keep home for now, needs update
-// pub mod login;
 // pub mod nostr_notes;
 // pub mod room_schedules;

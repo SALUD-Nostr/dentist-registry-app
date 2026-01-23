@@ -29,7 +29,10 @@ pub fn patients_list() -> Html {
             spawn_local(async move {
                 match patient_store.get_all().await {
                     Ok(all_patients) => {
-                        log!("Loaded patients:", format!("{} patients", all_patients.len()));
+                        log!(
+                            "Loaded patients:",
+                            format!("{} patients", all_patients.len())
+                        );
                         patients.set(all_patients.clone());
                         filtered_patients.set(all_patients);
                         is_loading.set(false);
