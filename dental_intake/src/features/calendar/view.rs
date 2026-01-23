@@ -105,6 +105,23 @@ fn calendar_view_inner() -> HtmlResult {
                 .fc-header-toolbar {
                     margin: 6px !important;
                 }
+                .fc {
+                    border: 1px solid hsl(var(--muted)) !important;
+                    border-opacity: 0.3 !important;
+                }
+                .fc-daygrid-day,
+                .fc-timegrid-slot {
+                    border-color: hsl(var(--muted)) !important;
+                    border-opacity: 0.3 !important;
+                }
+                .fc-col-header-cell {
+                    border-color: hsl(var(--muted)) !important;
+                    border-opacity: 0.3 !important;
+                }
+                .fc-timegrid-divider {
+                    border-color: hsl(var(--muted)) !important;
+                    border-opacity: 0.3 !important;
+                }
                 "}
             </style>
             <yew_full_calendar::FullCalendarComponent
