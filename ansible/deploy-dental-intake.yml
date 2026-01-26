@@ -142,7 +142,7 @@
         state: absent
 
     - name: Build Tailwind CSS styles
-      command: tailwindcss4 -i styles/input.css -o styles/output.css --minify
+      command: tailwindcss4 -i input.css -o output.css --minify
       args:
         chdir: "{{ app_dir }}"
       environment:
