@@ -8,7 +8,7 @@
     app_name: "dental_intake"
     app_dir: "{{ playbook_dir }}/../{{ app_name }}"
     project_root: "{{ playbook_dir }}/.."
-    cloudflare_project_name: "salud-dental"
+    cloudflare_project_name: "salud-registry"
     # Override these via command line or vars file:
     # ansible-playbook deploy-dental-intake.yml -e "cloudflare_account_id=YOUR_ACCOUNT_ID"
     cloudflare_account_id: "{{ lookup('env', 'CLOUDFLARE_ACCOUNT_ID') }}"
