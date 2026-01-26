@@ -23,20 +23,24 @@ impl EncounterStore {
     }
 
     /// Save an encounter to the database
-    pub async fn save(&self, encounter: &Encounter) -> Result<(), AppError> {
+    pub async fn save(
+        &self,
+        encounter: &Encounter,
+        keypair: &nostr_minions::nostro2_signer::keypair::NostrKeypair,
+    ) -> Result<(), AppError> {
+        // Wrap in SaludNote
+        let note = crate::salud_note::SaludNote::from_fhir(encounter, "Encounter", keypair)?;
+
         let tx = self
             .db
             .transaction(&[stores::ENCOUNTERS], TransactionMode::ReadWrite)?;
 
         let store = tx.object_store(stores::ENCOUNTERS)?;
 
-        let encounter_value = to_value(encounter)?;
+        let note_value = to_value(&note)?;
 
-        if let Some(id) = &encounter.id {
-            store.put(&encounter_value, Some(&JsValue::from_str(id)))?;
-        } else {
-            store.add(&encounter_value, None)?;
-        }
+        let id = encounter.id.as_ref().ok_or(AppError::MissingResourceId)?;
+        store.put(&note_value, Some(&JsValue::from_str(id)))?;
 
         tx.await?;
 
@@ -56,7 +60,8 @@ impl EncounterStore {
 
         match value {
             Some(js_val) if !js_val.is_undefined() && !js_val.is_null() => {
-                let encounter: Encounter = from_value(js_val)?;
+                let note: nostr_minions::nostro2::NostrNote = from_value(js_val)?;
+                let encounter = crate::salud_note::SaludNote::parse_fhir(&note)?;
                 Ok(Some(encounter))
             }
             _ => Ok(None),
@@ -75,11 +80,34 @@ impl EncounterStore {
 
         let mut encounters = Vec::new();
         for value in values.iter() {
-            let encounter: Encounter = from_value(value.clone())?;
-            encounters.push(encounter);
+            if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone()) {
+                if let Ok(encounter) = crate::salud_note::SaludNote::parse_fhir(&note) {
+                    encounters.push(encounter);
+                }
+            }
         }
 
         Ok(encounters)
+    }
+
+    /// Get all encounter notes (raw NostrNotes)
+    pub async fn get_all_notes(&self) -> Result<Vec<nostr_minions::nostro2::NostrNote>, AppError> {
+        let tx = self
+            .db
+            .transaction(&[stores::ENCOUNTERS], TransactionMode::ReadOnly)?;
+
+        let store = tx.object_store(stores::ENCOUNTERS)?;
+
+        let values = store.get_all(None, None)?.await?;
+
+        let mut notes = Vec::new();
+        for value in values.iter() {
+            if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone()) {
+                notes.push(note);
+            }
+        }
+
+        Ok(notes)
     }
 
     /// Get encounters for a specific patient
@@ -124,11 +152,15 @@ impl EncounterStore {
 pub struct EncounterStoreContext {
     pub store: Rc<EncounterStore>,
     pub version: UseStateHandle<u32>,
+    // Cache of NostrNotes in memory
+    pub notes_cache: UseStateHandle<Vec<nostr_minions::nostro2::NostrNote>>,
 }
 
 impl PartialEq for EncounterStoreContext {
     fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.store, &other.store) && *self.version == *other.version
+        Rc::ptr_eq(&self.store, &other.store)
+            && *self.version == *other.version
+            && *self.notes_cache == *other.notes_cache
     }
 }
 
@@ -145,10 +177,37 @@ pub fn encounter_store_provider(props: &EncounterStoreProviderProps) -> Html {
 
     let store = Rc::new(EncounterStore::from_db(patient_store.db.clone()));
     let version = use_state(|| 0u32);
+    let notes_cache = use_state(Vec::new);
+
+    // Load notes into cache when version changes
+    {
+        let store = store.clone();
+        let notes_cache = notes_cache.clone();
+        let version_val = *version;
+
+        use_effect_with(version_val, move |_| {
+            let notes_cache = notes_cache.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                match store.get_all_notes().await {
+                    Ok(all_notes) => {
+                        notes_cache.set(all_notes);
+                    }
+                    Err(e) => {
+                        gloo_console::error!(
+                            "Failed to load encounter notes:",
+                            format!("{:?}", e)
+                        );
+                    }
+                }
+            });
+            || ()
+        });
+    }
 
     let context = EncounterStoreContext {
         store: store.clone(),
         version: version.clone(),
+        notes_cache: notes_cache.clone(),
     };
 
     html! {
@@ -184,5 +243,27 @@ pub fn use_notify_encounters_changed() -> Callback<()> {
 
     Callback::from(move |_| {
         version.set(*version + 1);
+    })
+}
+
+/// Hook to access raw encounter NostrNotes
+#[hook]
+pub fn use_encounter_notes() -> Vec<nostr_minions::nostro2::NostrNote> {
+    let context = use_context::<EncounterStoreContext>()
+        .expect("EncounterStoreContext not found");
+    (*context.notes_cache).clone()
+}
+
+/// Hook to get a specific encounter note by ID
+#[hook]
+pub fn use_encounter_note(id: &str) -> Option<nostr_minions::nostro2::NostrNote> {
+    let notes = use_encounter_notes();
+    let id = id.to_string();
+    notes.into_iter().find(|note| {
+        if let Ok(encounter) = crate::salud_note::SaludNote::parse_fhir::<Encounter>(note) {
+            encounter.id.as_ref().map_or(false, |encounter_id| encounter_id == &id)
+        } else {
+            false
+        }
     })
 }

@@ -7,7 +7,7 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::components::typography::{Title, NormalText, MutedText};
+use crate::components::typography::{MutedText, NormalText, Title};
 
 // Pagination page size
 const PAGE_SIZE: usize = 10;
@@ -24,20 +24,17 @@ pub fn encounters_history() -> Html {
     let search_query = use_state(String::new);
 
     // Data state
-    let encounters = use_state(|| Vec::<(Encounter, Option<Patient>)>::new());
+    let encounters = use_state(Vec::<(Encounter, Option<Patient>)>::new);
     let total_count = use_state(|| 0usize);
     let is_loading = use_state(|| true);
     let error = use_state(|| None::<String>);
 
     // Load encounters when page or search changes
     {
-        let encounter_store = encounter_store.clone();
-        let patient_store = patient_store.clone();
         let encounters = encounters.clone();
         let total_count = total_count.clone();
         let is_loading = is_loading.clone();
         let error = error.clone();
-        let search_query = search_query.clone();
 
         use_effect_with(
             (*page, (*search_query).clone(), encounter_version),
@@ -53,114 +50,102 @@ pub fn encounters_history() -> Html {
                 let encounters = encounters.clone();
                 let total_count = total_count.clone();
                 let is_loading = is_loading.clone();
-                let error = error.clone();
 
                 spawn_local(async move {
-                    match encounter_store.get_all().await {
-                        Ok(all_encounters) => {
-                            log!(
-                                "Loaded encounters:",
-                                format!("{} total", all_encounters.len())
-                            );
+                    let Ok(all_encounters) = encounter_store.get_all().await else {
+                        error.set(Some(format!("Error al cargar citas",)));
+                        is_loading.set(false);
+                        return;
+                    };
 
-                            // Filter: show only completed encounters (Finished, Cancelled, etc.)
-                            let mut filtered: Vec<Encounter> = all_encounters
-                                .into_iter()
-                                .filter(|encounter| {
-                                    // Show all non-planned encounters for history
-                                    encounter.status != EncounterStatus::Planned
-                                })
-                                .collect();
+                    log!(
+                        "Loaded encounters:",
+                        format!("{} total", all_encounters.len())
+                    );
 
-                            // Apply search filter
-                            if !query.trim().is_empty() {
-                                let filtered_with_search =
-                                    std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
+                    // Filter: show only completed encounters (Finished, Cancelled, etc.)
+                    let mut filtered: Vec<Encounter> = all_encounters
+                        .into_iter()
+                        .filter(|encounter| {
+                            // Show all non-planned encounters for history
+                            encounter.status != EncounterStatus::Planned
+                        })
+                        .collect();
 
-                                for encounter in filtered {
-                                    let patient_ref =
-                                        encounter.subject.reference.as_ref().map(|r| r.clone());
+                    // Apply search filter
+                    if !query.trim().is_empty() {
+                        let filtered_with_search =
+                            std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
 
-                                    if let Some(ref_str) = patient_ref {
-                                        if ref_str.to_lowercase().contains(&query) {
-                                            filtered_with_search.borrow_mut().push(encounter);
-                                            continue;
-                                        }
+                        for encounter in filtered {
+                            let patient_ref = encounter.subject.reference.clone();
 
-                                        // Try to get patient name for search
-                                        if let Some(patient_id) = ref_str.strip_prefix("Patient/") {
-                                            if let Ok(Some(patient)) =
-                                                patient_store.get(patient_id).await
-                                            {
-                                                if let Some(full_name) = patient.full_name() {
-                                                    if full_name.to_lowercase().contains(&query) {
-                                                        filtered_with_search
-                                                            .borrow_mut()
-                                                            .push(encounter);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
+                            if let Some(ref_str) = patient_ref {
+                                if ref_str.to_lowercase().contains(&query) {
+                                    filtered_with_search.borrow_mut().push(encounter);
+                                    continue;
                                 }
 
-                                filtered = filtered_with_search.borrow().clone();
+                                // Try to get patient name for search
+                                if let Some(patient_id) = ref_str.strip_prefix("Patient/")
+                                    && let Ok(Some(patient)) = patient_store.get(patient_id).await
+                                    && let Some(full_name) = patient.full_name()
+                                    && full_name.to_lowercase().contains(&query)
+                                {
+                                    filtered_with_search.borrow_mut().push(encounter);
+                                }
                             }
-
-                            // Sort by date descending (most recent first)
-                            filtered.sort_by(|a, b| {
-                                let date_a = a
-                                    .period
-                                    .as_ref()
-                                    .and_then(|p| p.start)
-                                    .unwrap_or_else(Utc::now);
-                                let date_b = b
-                                    .period
-                                    .as_ref()
-                                    .and_then(|p| p.start)
-                                    .unwrap_or_else(Utc::now);
-                                date_b.cmp(&date_a)
-                            });
-
-                            // Get paginated slice
-                            let start = page_num * PAGE_SIZE;
-                            let end = (start + PAGE_SIZE).min(filtered.len());
-                            let paginated = if start < filtered.len() {
-                                filtered[start..end].to_vec()
-                            } else {
-                                Vec::new()
-                            };
-
-                            // Load patient information for each encounter
-                            let mut encounters_with_patients = Vec::new();
-                            for encounter in paginated {
-                                let patient =
-                                    if let Some(ref_str) = encounter.subject.reference.as_ref() {
-                                        if let Some(patient_id) = ref_str.strip_prefix("Patient/") {
-                                            match patient_store.get(patient_id).await {
-                                                Ok(Some(p)) => Some(p),
-                                                _ => None,
-                                            }
-                                        } else {
-                                            None
-                                        }
-                                    } else {
-                                        None
-                                    };
-
-                                encounters_with_patients.push((encounter, patient));
-                            }
-
-                            encounters.set(encounters_with_patients);
-                            total_count.set(filtered.len());
-                            is_loading.set(false);
                         }
-                        Err(e) => {
-                            log!("Error loading encounters:", format!("{:?}", e));
-                            error.set(Some(format!("Error al cargar citas: {:?}", e)));
-                            is_loading.set(false);
-                        }
+
+                        filtered = filtered_with_search.borrow().clone();
                     }
+
+                    // Sort by date descending (most recent first)
+                    filtered.sort_by(|a, b| {
+                        let date_a = a
+                            .period
+                            .as_ref()
+                            .and_then(|p| p.start)
+                            .unwrap_or_else(Utc::now);
+                        let date_b = b
+                            .period
+                            .as_ref()
+                            .and_then(|p| p.start)
+                            .unwrap_or_else(Utc::now);
+                        date_b.cmp(&date_a)
+                    });
+
+                    // Get paginated slice
+                    let start = page_num * PAGE_SIZE;
+                    let end = (start + PAGE_SIZE).min(filtered.len());
+                    let paginated = if start < filtered.len() {
+                        filtered[start..end].to_vec()
+                    } else {
+                        Vec::new()
+                    };
+
+                    // Load patient information for each encounter
+                    let mut encounters_with_patients = Vec::new();
+                    for encounter in paginated {
+                        let patient = if let Some(ref_str) = encounter.subject.reference.as_ref() {
+                            if let Some(patient_id) = ref_str.strip_prefix("Patient/") {
+                                match patient_store.get(patient_id).await {
+                                    Ok(Some(p)) => Some(p),
+                                    _ => None,
+                                }
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        };
+
+                        encounters_with_patients.push((encounter, patient));
+                    }
+
+                    encounters.set(encounters_with_patients);
+                    total_count.set(filtered.len());
+                    is_loading.set(false);
                 });
 
                 || ()
@@ -270,7 +255,7 @@ pub fn encounters_history() -> Html {
                     } else if (*encounters).is_empty() && (*search_query).is_empty() {
                         // No encounters at all
                         <div class="p-8 flex items-center justify-center">
-                            <shady_minions::ui::Card>
+                            <shady_minions::ui::Card class="!border-0 !shadow-none">
                                 <div class="flex flex-col items-center justify-center gap-4 py-8">
                                     <crate::components::List class="size-16 text-muted opacity-50" />
                                     <NormalText class="text-muted text-center font-semibold">
@@ -285,7 +270,7 @@ pub fn encounters_history() -> Html {
                     } else if (*encounters).is_empty() {
                         // No search results
                         <div class="p-8 flex items-center justify-center">
-                            <shady_minions::ui::Card>
+                            <shady_minions::ui::Card class="!border-0 !shadow-none">
                                 <div class="flex flex-col items-center justify-center gap-4 py-8">
                                     <crate::components::Search class="size-16 text-muted opacity-50" />
                                     <NormalText class="text-muted text-center font-semibold">

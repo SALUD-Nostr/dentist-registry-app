@@ -25,6 +25,7 @@ pub fn encounter_form() -> Html {
     let patient_store = crate::storage::use_patient_store();
     let encounter_store = crate::storage::use_encounter_store();
     let notify_encounters_changed = crate::storage::use_notify_encounters_changed();
+    let nostr_key = nostr_minions::use_nostr_key();
 
     // Form state
     let current_step = use_state(|| FormStep::SelectPatient);
@@ -128,6 +129,7 @@ pub fn encounter_form() -> Html {
         let is_saving = is_saving.clone();
         let errors = errors.clone();
         let notify_encounters_changed = notify_encounters_changed.clone();
+        let nostr_key = nostr_key.clone();
 
         Callback::from(move |_| {
             let Some(patient) = (*selected_patient).as_ref() else {
@@ -154,6 +156,7 @@ pub fn encounter_form() -> Html {
             let is_saving = is_saving.clone();
             let errors = errors.clone();
             let notify_encounters_changed = notify_encounters_changed.clone();
+            let nostr_key = nostr_key.clone();
 
             spawn_local(async move {
                 // Parse date and time
@@ -220,8 +223,19 @@ pub fn encounter_form() -> Html {
                     }
                 };
 
+                // Get keypair
+                let keypair = match nostr_key.as_ref() {
+                    Some(key) => key,
+                    None => {
+                        log!("Error: No keypair available");
+                        errors.set(vec!["No se encontró la clave de firma".to_string()]);
+                        is_saving.set(false);
+                        return;
+                    }
+                };
+
                 log!("Saving encounter:", format!("{:?}", encounter));
-                match encounter_store.save(&encounter).await {
+                match encounter_store.save(&encounter, keypair).await {
                     Ok(()) => {
                         log!("Encounter saved successfully");
                         notify_encounters_changed.emit(());

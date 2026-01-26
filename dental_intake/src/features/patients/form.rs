@@ -18,6 +18,7 @@ pub fn patient_form() -> Html {
     let navigator = use_navigator().unwrap();
     let patient_store = crate::storage::use_patient_store();
     let notify_patients_changed = crate::storage::use_notify_patients_changed();
+    let nostr_key = nostr_minions::use_nostr_key();
 
     // Form state
     let given_name =  use_state(String::new);
@@ -72,6 +73,7 @@ pub fn patient_form() -> Html {
         let country = country.clone();
         let is_saving = is_saving.clone();
         let errors = errors.clone();
+        let nostr_key = nostr_key.clone();
 
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default();
@@ -99,6 +101,7 @@ pub fn patient_form() -> Html {
             let is_saving = is_saving.clone();
             let errors = errors.clone();
             let notify_patients_changed = notify_patients_changed.clone();
+            let nostr_key = nostr_key.clone();
 
             spawn_local(async move {
                 // Build HumanName
@@ -206,8 +209,19 @@ pub fn patient_form() -> Html {
 
                 match patient_result {
                     Ok(patient) => {
+                        // Get keypair
+                        let keypair = match nostr_key.as_ref() {
+                            Some(key) => key,
+                            None => {
+                                log!("Error: No keypair available");
+                                errors.set(vec!["No se encontró la clave de firma".to_string()]);
+                                is_saving.set(false);
+                                return;
+                            }
+                        };
+
                         log!("Saving patient:", format!("{:?}", patient));
-                        match patient_store.save(&patient).await {
+                        match patient_store.save(&patient, keypair).await {
                             Ok(()) => {
                                 log!("Patient saved successfully");
                                 notify_patients_changed.emit(());

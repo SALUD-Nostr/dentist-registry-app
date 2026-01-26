@@ -119,21 +119,24 @@ impl PatientStore {
     }
 
     /// Save a patient to the database
-    pub async fn save(&self, patient: &Patient) -> Result<(), AppError> {
+    pub async fn save(
+        &self,
+        patient: &Patient,
+        keypair: &nostr_minions::nostro2_signer::keypair::NostrKeypair,
+    ) -> Result<(), AppError> {
+        // Wrap in SaludNote
+        let note = crate::salud_note::SaludNote::from_fhir(patient, "Patient", keypair)?;
+
         let tx = self
             .db
             .transaction(&[stores::PATIENTS], TransactionMode::ReadWrite)?;
 
         let store = tx.object_store(stores::PATIENTS)?;
 
-        let patient_value = to_value(patient)?;
+        let note_value = to_value(&note)?;
 
-        // Use patient id as key if available, otherwise use auto-increment
-        if let Some(id) = &patient.id {
-            store.put(&patient_value, Some(&JsValue::from_str(id)))?;
-        } else {
-            store.add(&patient_value, None)?;
-        }
+        let id = patient.id.as_ref().ok_or(AppError::MissingResourceId)?;
+        store.put(&note_value, Some(&JsValue::from_str(id)))?;
 
         tx.await?;
 
@@ -153,7 +156,8 @@ impl PatientStore {
 
         match value {
             Some(js_val) if !js_val.is_undefined() && !js_val.is_null() => {
-                let patient: Patient = from_value(js_val)?;
+                let note: nostr_minions::nostro2::NostrNote = from_value(js_val)?;
+                let patient = crate::salud_note::SaludNote::parse_fhir(&note)?;
                 Ok(Some(patient))
             }
             _ => Ok(None),
@@ -172,11 +176,34 @@ impl PatientStore {
 
         let mut patients = Vec::new();
         for value in values.iter() {
-            let patient: Patient = from_value(value.clone())?;
-            patients.push(patient);
+            if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone()) {
+                if let Ok(patient) = crate::salud_note::SaludNote::parse_fhir(&note) {
+                    patients.push(patient);
+                }
+            }
         }
 
         Ok(patients)
+    }
+
+    /// Get all patient notes (raw NostrNotes)
+    pub async fn get_all_notes(&self) -> Result<Vec<nostr_minions::nostro2::NostrNote>, AppError> {
+        let tx = self
+            .db
+            .transaction(&[stores::PATIENTS], TransactionMode::ReadOnly)?;
+
+        let store = tx.object_store(stores::PATIENTS)?;
+
+        let values = store.get_all(None, None)?.await?;
+
+        let mut notes = Vec::new();
+        for value in values.iter() {
+            if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone()) {
+                notes.push(note);
+            }
+        }
+
+        Ok(notes)
     }
 
     /// Search patients by name (case-insensitive substring match)
@@ -234,11 +261,15 @@ impl PatientStore {
 pub struct PatientStoreContext {
     pub store: Rc<PatientStore>,
     pub version: UseStateHandle<u32>,
+    // Cache of NostrNotes in memory
+    pub notes_cache: UseStateHandle<Vec<nostr_minions::nostro2::NostrNote>>,
 }
 
 impl PartialEq for PatientStoreContext {
     fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.store, &other.store) && *self.version == *other.version
+        Rc::ptr_eq(&self.store, &other.store)
+            && *self.version == *other.version
+            && *self.notes_cache == *other.notes_cache
     }
 }
 
@@ -252,7 +283,9 @@ pub struct PatientStoreProviderProps {
 pub fn patient_store_provider(props: &PatientStoreProviderProps) -> Html {
     let store = use_state(|| None::<Rc<PatientStore>>);
     let version = use_state(|| 0u32);
+    let notes_cache = use_state(Vec::new);
 
+    // Initialize store
     {
         let store = store.clone();
         use_effect_with((), move |_| {
@@ -274,10 +307,38 @@ pub fn patient_store_provider(props: &PatientStoreProviderProps) -> Html {
         });
     }
 
+    // Load notes into cache when store is ready or version changes
+    {
+        let store_opt = (*store).clone();
+        let notes_cache = notes_cache.clone();
+        let version_val = *version;
+
+        use_effect_with((store_opt.is_some(), version_val), move |_| {
+            if let Some(store) = store_opt {
+                let notes_cache = notes_cache.clone();
+                wasm_bindgen_futures::spawn_local(async move {
+                    match store.get_all_notes().await {
+                        Ok(all_notes) => {
+                            notes_cache.set(all_notes);
+                        }
+                        Err(e) => {
+                            gloo_console::error!(
+                                "Failed to load patient notes:",
+                                format!("{:?}", e)
+                            );
+                        }
+                    }
+                });
+            }
+            || ()
+        });
+    }
+
     if let Some(store) = (*store).as_ref() {
         let context = PatientStoreContext {
             store: store.clone(),
             version: version.clone(),
+            notes_cache: notes_cache.clone(),
         };
 
         html! {
@@ -320,5 +381,27 @@ pub fn use_notify_patients_changed() -> Callback<()> {
 
     Callback::from(move |_| {
         version.set(*version + 1);
+    })
+}
+
+/// Hook to access raw patient NostrNotes
+#[hook]
+pub fn use_patient_notes() -> Vec<nostr_minions::nostro2::NostrNote> {
+    let context = use_context::<PatientStoreContext>()
+        .expect("PatientStoreContext not found");
+    (*context.notes_cache).clone()
+}
+
+/// Hook to get a specific patient note by ID
+#[hook]
+pub fn use_patient_note(id: &str) -> Option<nostr_minions::nostro2::NostrNote> {
+    let notes = use_patient_notes();
+    let id = id.to_string();
+    notes.into_iter().find(|note| {
+        if let Ok(patient) = crate::salud_note::SaludNote::parse_fhir::<Patient>(note) {
+            patient.id.as_ref().map_or(false, |patient_id| patient_id == &id)
+        } else {
+            false
+        }
     })
 }

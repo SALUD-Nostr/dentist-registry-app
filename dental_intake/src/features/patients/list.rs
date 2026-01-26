@@ -171,7 +171,7 @@ pub fn patients_list() -> Html {
                     </div>
                 } else if let Some(err) = (*error).as_ref() {
                     <div class="flex items-center justify-center h-full">
-                        <shady_minions::ui::Card>
+                        <shady_minions::ui::Card class="!border-0 !shadow-none">
                             <div class="flex flex-col items-center gap-4 py-8">
                                 <crate::components::X class="size-16 text-red-600" />
                                 <NormalText class="text-red-600 font-semibold">{"Error al cargar pacientes"}</NormalText>
@@ -182,7 +182,7 @@ pub fn patients_list() -> Html {
                 } else if (*filtered_patients).is_empty() && (*search_query).is_empty() {
                     // No patients at all
                     <div class="flex items-center justify-center h-full">
-                        <shady_minions::ui::Card>
+                        <shady_minions::ui::Card class="!border-0 !shadow-none">
                             <div class="flex flex-col items-center justify-center gap-4 py-8">
                                 <crate::components::Users class="size-16 text-muted opacity-50" />
                                 <NormalText class="text-muted text-center font-semibold">
@@ -197,7 +197,7 @@ pub fn patients_list() -> Html {
                 } else if (*filtered_patients).is_empty() {
                     // No results for search
                     <div class="flex items-center justify-center h-full">
-                        <shady_minions::ui::Card>
+                        <shady_minions::ui::Card class="!border-0 !shadow-none">
                             <div class="flex flex-col items-center justify-center gap-4 py-8">
                                 <crate::components::Search class="size-16 text-muted opacity-50" />
                                 <NormalText class="text-muted text-center font-semibold">

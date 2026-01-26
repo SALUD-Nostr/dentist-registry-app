@@ -20,6 +20,7 @@ mod constants;
 mod error;
 mod features;
 mod router;
+mod salud_note;
 mod storage;
 // pub(crate) mod shared; // TODO: Re-enable after Nostr integration restored
 

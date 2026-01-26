@@ -23,6 +23,7 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
     let encounter_store = crate::storage::use_encounter_store();
     let patient_store = crate::storage::use_patient_store();
     let clinical_impression_store = crate::storage::use_clinical_impression_store();
+    let nostr_key = nostr_minions::use_nostr_key();
 
     let encounter = use_state(|| None::<Encounter>);
     let patient = use_state(|| None::<Patient>);
@@ -132,17 +133,28 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
         let encounter = encounter.clone();
         let encounter_store = encounter_store.clone();
         let encounter_id = props.encounter_id.clone();
+        let nostr_key = nostr_key.clone();
 
         Callback::from(move |_: MouseEvent| {
             let encounter = encounter.clone();
             let encounter_store = encounter_store.clone();
             let encounter_id = encounter_id.clone();
+            let nostr_key = nostr_key.clone();
 
             spawn_local(async move {
                 if let Some(mut enc) = (*encounter).clone() {
                     enc.status = EncounterStatus::Finished;
 
-                    match encounter_store.save(&enc).await {
+                    // Get keypair
+                    let keypair = match nostr_key.as_ref() {
+                        Some(key) => key,
+                        None => {
+                            log!("Error: No keypair available");
+                            return;
+                        }
+                    };
+
+                    match encounter_store.save(&enc, keypair).await {
                         Ok(_) => {
                             log!("Encounter marked as completed");
                             // Reload the encounter
@@ -164,17 +176,28 @@ let handle_mark_cancelled = {
         let encounter = encounter.clone();
         let encounter_store = encounter_store.clone();
         let encounter_id = props.encounter_id.clone();
+        let nostr_key = nostr_key.clone();
 
         Callback::from(move |_: MouseEvent| {
             let encounter = encounter.clone();
             let encounter_store = encounter_store.clone();
             let encounter_id = encounter_id.clone();
+            let nostr_key = nostr_key.clone();
 
             spawn_local(async move {
                 if let Some(mut enc) = (*encounter).clone() {
                     enc.status = EncounterStatus::Cancelled;
 
-                    match encounter_store.save(&enc).await {
+                    // Get keypair
+                    let keypair = match nostr_key.as_ref() {
+                        Some(key) => key,
+                        None => {
+                            log!("Error: No keypair available");
+                            return;
+                        }
+                    };
+
+                    match encounter_store.save(&enc, keypair).await {
                         Ok(()) => {
                             log!("Encounter marked as cancelled");
                             // Reload the encounter

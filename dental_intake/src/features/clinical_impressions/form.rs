@@ -23,6 +23,7 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
     let navigator = use_navigator().unwrap();
     let clinical_impression_store = crate::storage::use_clinical_impression_store();
     let encounter_store = crate::storage::use_encounter_store();
+    let nostr_key = nostr_minions::use_nostr_key();
 
     // Form state
     let summary = use_state(String::new);
@@ -125,6 +126,7 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
         let errors = errors.clone();
         let clinical_impression_store = clinical_impression_store.clone();
         let navigator = navigator.clone();
+        let nostr_key = nostr_key.clone();
 
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default();
@@ -153,6 +155,7 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
             let errors = errors.clone();
             let clinical_impression_store = clinical_impression_store.clone();
             let navigator = navigator.clone();
+            let nostr_key = nostr_key.clone();
 
             spawn_local(async move {
                 // Build findings
@@ -212,18 +215,31 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
                 }
 
                 match builder.build() {
-                    Ok(impression) => match clinical_impression_store.save(&impression).await {
-                        Ok(_) => {
-                            log!("Clinical impression saved successfully");
-                            navigator
-                                .push(&crate::router::Route::EncounterDetail { id: encounter_id });
+                    Ok(impression) => {
+                        // Get keypair
+                        let keypair = match nostr_key.as_ref() {
+                            Some(key) => key,
+                            None => {
+                                log!("Error: No keypair available");
+                                errors.set(vec!["No se encontró la clave de firma".to_string()]);
+                                is_saving.set(false);
+                                return;
+                            }
+                        };
+
+                        match clinical_impression_store.save(&impression, keypair).await {
+                            Ok(_) => {
+                                log!("Clinical impression saved successfully");
+                                navigator
+                                    .push(&crate::router::Route::EncounterDetail { id: encounter_id });
+                            }
+                            Err(e) => {
+                                log!("Error saving clinical impression:", format!("{:?}", e));
+                                errors.set(vec![format!("Error al guardar: {:?}", e)]);
+                                is_saving.set(false);
+                            }
                         }
-                        Err(e) => {
-                            log!("Error saving clinical impression:", format!("{:?}", e));
-                            errors.set(vec![format!("Error al guardar: {:?}", e)]);
-                            is_saving.set(false);
-                        }
-                    },
+                    }
                     Err(e) => {
                         log!("Error building clinical impression:", format!("{:?}", e));
                         errors.set(vec![format!("Error al crear impresión: {:?}", e)]);

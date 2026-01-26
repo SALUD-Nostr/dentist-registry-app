@@ -11,6 +11,7 @@
 
 pub mod components;
 pub mod error;
+pub mod salud_note;
 pub mod storage;
 
 // Re-export commonly used types for testing
