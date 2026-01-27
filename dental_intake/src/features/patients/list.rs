@@ -6,8 +6,8 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::components::{Button, ButtonVariant, ButtonSize};
-use crate::components::typography::{Title, NormalText, MutedText};
+use crate::components::typography::{MutedText, NormalText, Title};
+use crate::components::{Button, ButtonSize, ButtonVariant};
 
 #[function_component(PatientsList)]
 pub fn patients_list() -> Html {

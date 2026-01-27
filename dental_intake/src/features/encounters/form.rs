@@ -10,8 +10,8 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::components::{Button, ButtonVariant, ButtonSize};
-use crate::components::typography::{Title, Subtitle, Label, MutedText, NormalText};
+use crate::components::typography::{Label, MutedText, NormalText, Subtitle, Title};
+use crate::components::{Button, ButtonSize, ButtonVariant};
 
 #[derive(Clone, PartialEq)]
 enum FormStep {
@@ -193,7 +193,9 @@ pub fn encounter_form() -> Html {
 
                 // Validate end time is after start time
                 if end_time <= start_time {
-                    errors.set(vec!["La hora de fin debe ser después de la hora de inicio".to_string()]);
+                    errors.set(vec![
+                        "La hora de fin debe ser después de la hora de inicio".to_string(),
+                    ]);
                     is_saving.set(false);
                     return;
                 }
@@ -207,7 +209,10 @@ pub fn encounter_form() -> Html {
                 let end_local = Local.from_local_datetime(&end_naive).single();
 
                 let (start_utc, end_utc) = match (start_local, end_local) {
-                    (Some(start), Some(end)) => (start.with_timezone(&chrono::Utc), end.with_timezone(&chrono::Utc)),
+                    (Some(start), Some(end)) => (
+                        start.with_timezone(&chrono::Utc),
+                        end.with_timezone(&chrono::Utc),
+                    ),
                     _ => {
                         errors.set(vec!["Error al convertir zona horaria".to_string()]);
                         is_saving.set(false);

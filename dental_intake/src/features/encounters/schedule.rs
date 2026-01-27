@@ -7,8 +7,8 @@ use wasm_bindgen::JsValue;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::components::{Button, ButtonVariant, ButtonSize};
 use crate::components::typography::Title;
+use crate::components::{Button, ButtonSize, ButtonVariant};
 
 #[function_component(EncountersSchedule)]
 pub fn encounters_schedule() -> Html {

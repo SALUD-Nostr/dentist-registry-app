@@ -1,4 +1,4 @@
-//! Encounter storage using IndexedDB
+//! Encounter storage using `IndexedDB`
 
 use gloo_console::log;
 use idb::{Database, TransactionMode};
@@ -18,7 +18,7 @@ pub struct EncounterStore {
 
 impl EncounterStore {
     /// Create from existing database
-    pub fn from_db(db: Rc<Database>) -> Self {
+    #[must_use] pub const fn from_db(db: Rc<Database>) -> Self {
         Self { db }
     }
 
@@ -79,18 +79,17 @@ impl EncounterStore {
         let values = store.get_all(None, None)?.await?;
 
         let mut encounters = Vec::new();
-        for value in values.iter() {
-            if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone()) {
-                if let Ok(encounter) = crate::salud_note::SaludNote::parse_fhir(&note) {
+        for value in &values {
+            if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone())
+                && let Ok(encounter) = crate::salud_note::SaludNote::parse_fhir(&note) {
                     encounters.push(encounter);
                 }
-            }
         }
 
         Ok(encounters)
     }
 
-    /// Get all encounter notes (raw NostrNotes)
+    /// Get all encounter notes (raw `NostrNotes`)
     pub async fn get_all_notes(&self) -> Result<Vec<nostr_minions::nostro2::NostrNote>, AppError> {
         let tx = self
             .db
@@ -101,7 +100,7 @@ impl EncounterStore {
         let values = store.get_all(None, None)?.await?;
 
         let mut notes = Vec::new();
-        for value in values.iter() {
+        for value in &values {
             if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone()) {
                 notes.push(note);
             }
@@ -114,7 +113,7 @@ impl EncounterStore {
     pub async fn get_by_patient(&self, patient_id: &str) -> Result<Vec<Encounter>, AppError> {
         let all_encounters = self.get_all().await?;
 
-        let patient_ref = format!("Patient/{}", patient_id);
+        let patient_ref = format!("Patient/{patient_id}");
 
         let filtered: Vec<Encounter> = all_encounters
             .into_iter()
@@ -122,8 +121,7 @@ impl EncounterStore {
                 encounter
                     .subject
                     .reference
-                    .as_ref()
-                    .map_or(false, |r| r == &patient_ref)
+                    .as_ref() == Some(&patient_ref)
             })
             .collect();
 
@@ -193,10 +191,7 @@ pub fn encounter_store_provider(props: &EncounterStoreProviderProps) -> Html {
                         notes_cache.set(all_notes);
                     }
                     Err(e) => {
-                        gloo_console::error!(
-                            "Failed to load encounter notes:",
-                            format!("{:?}", e)
-                        );
+                        gloo_console::error!("Failed to load encounter notes:", format!("{:?}", e));
                     }
                 }
             });
@@ -205,9 +200,9 @@ pub fn encounter_store_provider(props: &EncounterStoreProviderProps) -> Html {
     }
 
     let context = EncounterStoreContext {
-        store: store.clone(),
-        version: version.clone(),
-        notes_cache: notes_cache.clone(),
+        store,
+        version,
+        notes_cache,
     };
 
     html! {
@@ -236,21 +231,19 @@ pub fn use_encounter_store_version() -> u32 {
 /// Hook to notify that encounters have been updated
 #[hook]
 pub fn use_notify_encounters_changed() -> Callback<()> {
-    let context = use_context::<EncounterStoreContext>()
-        .expect("EncounterStoreContext not found");
+    let context = use_context::<EncounterStoreContext>().expect("EncounterStoreContext not found");
 
-    let version = context.version.clone();
+    let version = context.version;
 
-    Callback::from(move |_| {
+    Callback::from(move |()| {
         version.set(*version + 1);
     })
 }
 
-/// Hook to access raw encounter NostrNotes
+/// Hook to access raw encounter `NostrNotes`
 #[hook]
 pub fn use_encounter_notes() -> Vec<nostr_minions::nostro2::NostrNote> {
-    let context = use_context::<EncounterStoreContext>()
-        .expect("EncounterStoreContext not found");
+    let context = use_context::<EncounterStoreContext>().expect("EncounterStoreContext not found");
     (*context.notes_cache).clone()
 }
 
@@ -261,7 +254,9 @@ pub fn use_encounter_note(id: &str) -> Option<nostr_minions::nostro2::NostrNote>
     let id = id.to_string();
     notes.into_iter().find(|note| {
         if let Ok(encounter) = crate::salud_note::SaludNote::parse_fhir::<Encounter>(note) {
-            encounter.id.as_ref().map_or(false, |encounter_id| encounter_id == &id)
+            encounter
+                .id
+                .as_ref() == Some(&id)
         } else {
             false
         }

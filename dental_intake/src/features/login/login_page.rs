@@ -1,10 +1,10 @@
+use nostr_minions::NostrSigner;
+use wasm_bindgen_futures::spawn_local;
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
-use wasm_bindgen_futures::spawn_local;
-use nostr_minions::NostrSigner;
 
-use crate::components::{Button, ButtonVariant, ButtonSize};
-use crate::components::typography::{Subtitle, MutedText, Label, NormalText};
+use crate::components::typography::{Label, MutedText, NormalText, Subtitle};
+use crate::components::{Button, ButtonSize, ButtonVariant};
 
 #[function_component(LoginPage)]
 pub fn login_page() -> Html {
@@ -137,7 +137,7 @@ pub fn login_page() -> Html {
                     <Button
                         variant={ButtonVariant::Primary}
                         size={ButtonSize::Medium}
-                        button_type="submit".to_string()
+                        button_type={"submit".to_string()}
                         full_width={true}
                     >
                         {"Iniciar Sesión"}
@@ -236,7 +236,7 @@ pub fn login_page() -> Html {
                                     <Button
                                         variant={ButtonVariant::Primary}
                                         size={ButtonSize::Medium}
-                                        button_type="submit".to_string()
+                                        button_type={"submit".to_string()}
                                         class="flex-1"
                                     >
                                         {"Entiendo, Generar Clave"}

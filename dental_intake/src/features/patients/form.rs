@@ -11,8 +11,8 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::components::{Button, ButtonVariant, ButtonSize};
-use crate::components::typography::{Title, Subtitle, Label};
+use crate::components::typography::{Label, Subtitle, Title};
+use crate::components::{Button, ButtonSize, ButtonVariant};
 
 #[function_component(PatientForm)]
 pub fn patient_form() -> Html {
@@ -22,15 +22,15 @@ pub fn patient_form() -> Html {
     let nostr_key = nostr_minions::use_nostr_key();
 
     // Form state
-    let given_name =  use_state(String::new);
+    let given_name = use_state(String::new);
     let family_name = use_state(String::new);
-    let birth_date =  use_state(String::new);
+    let birth_date = use_state(String::new);
     let gender = use_state(|| None::<AdministrativeGender>);
-    let phone =  use_state(String::new);
-    let email =  use_state(String::new);
+    let phone = use_state(String::new);
+    let email = use_state(String::new);
     let street = use_state(String::new);
-    let city =   use_state(String::new);
-    let state =  use_state(String::new);
+    let city = use_state(String::new);
+    let state = use_state(String::new);
     let postal_code = use_state(String::new);
     let country = use_state(String::new);
 
@@ -543,7 +543,7 @@ pub fn patient_form() -> Html {
                                 <Button
                                     variant={ButtonVariant::Primary}
                                     size={ButtonSize::Medium}
-                                    button_type="submit".to_string()
+                                    button_type={"submit".to_string()}
                                     loading={*is_saving}
                                     disabled={*is_saving}
                                 >

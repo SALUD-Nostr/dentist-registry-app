@@ -2,7 +2,7 @@
 
 use yew::prelude::*;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum ButtonVariant {
     Primary,
     Secondary,
@@ -11,7 +11,7 @@ pub enum ButtonVariant {
     Text,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum ButtonSize {
     Small,
     Medium,

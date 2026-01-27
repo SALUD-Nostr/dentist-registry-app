@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::components::typography::{Title, Subtitle, MutedText};
+use crate::components::typography::{MutedText, Subtitle, Title};
 
 #[function_component(Home)]
 pub fn home() -> Html {

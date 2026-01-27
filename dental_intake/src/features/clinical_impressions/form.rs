@@ -11,8 +11,8 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::components::{Button, ButtonVariant, ButtonSize};
-use crate::components::typography::{Title, Subtitle, MutedText, Label};
+use crate::components::typography::{Label, MutedText, Subtitle, Title};
+use crate::components::{Button, ButtonSize, ButtonVariant};
 
 #[derive(Properties, PartialEq, Eq)]
 pub struct ClinicalImpressionFormProps {
@@ -231,8 +231,9 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
                         match clinical_impression_store.save(&impression, keypair).await {
                             Ok(_) => {
                                 log!("Clinical impression saved successfully");
-                                navigator
-                                    .push(&crate::router::Route::EncounterDetail { id: encounter_id });
+                                navigator.push(&crate::router::Route::EncounterDetail {
+                                    id: encounter_id,
+                                });
                             }
                             Err(e) => {
                                 log!("Error saving clinical impression:", format!("{:?}", e));
@@ -428,7 +429,7 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
                                 <Button
                                     variant={ButtonVariant::Primary}
                                     size={ButtonSize::Medium}
-                                    button_type="submit".to_string()
+                                    button_type={"submit".to_string()}
                                     loading={*is_saving}
                                     disabled={*is_saving}
                                 >

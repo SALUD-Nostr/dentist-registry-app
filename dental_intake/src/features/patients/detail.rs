@@ -461,4 +461,3 @@ fn encounter_preview_card(props: &EncounterPreviewProps) -> Html {
         </yew_router::components::Link::<crate::router::Route>>
     }
 }
-

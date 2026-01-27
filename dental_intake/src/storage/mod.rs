@@ -1,7 +1,7 @@
-//! IndexedDB storage layer for FHIR resources
+//! `IndexedDB` storage layer for FHIR resources
 //!
-//! This module provides persistent storage for Patient, Encounter, and ClinicalImpression
-//! resources using browser IndexedDB.
+//! This module provides persistent storage for Patient, Encounter, and `ClinicalImpression`
+//! resources using browser `IndexedDB`.
 
 use yew::prelude::*;
 
@@ -17,8 +17,8 @@ pub use encounter_store::{
     use_notify_encounters_changed,
 };
 pub use patient_store::{
-    PatientStore, PatientStoreProvider, use_patient_store, use_patient_store_version,
-    use_notify_patients_changed,
+    PatientStore, PatientStoreProvider, use_notify_patients_changed, use_patient_store,
+    use_patient_store_version,
 };
 
 /// Database name for all FHIR resources

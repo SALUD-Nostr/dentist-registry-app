@@ -1,4 +1,4 @@
-//! Clinical Impression storage using IndexedDB
+//! Clinical Impression storage using `IndexedDB`
 
 use gloo_console::log;
 use idb::{Database, TransactionMode};
@@ -18,7 +18,7 @@ pub struct ClinicalImpressionStore {
 
 impl ClinicalImpressionStore {
     /// Create from existing database
-    pub fn from_db(db: Rc<Database>) -> Self {
+    pub const fn from_db(db: Rc<Database>) -> Self {
         Self { db }
     }
 
@@ -29,7 +29,8 @@ impl ClinicalImpressionStore {
         keypair: &nostr_minions::nostro2_signer::keypair::NostrKeypair,
     ) -> Result<(), AppError> {
         // Wrap in SaludNote
-        let note = crate::salud_note::SaludNote::from_fhir(impression, "ClinicalImpression", keypair)?;
+        let note =
+            crate::salud_note::SaludNote::from_fhir(impression, "ClinicalImpression", keypair)?;
 
         let tx = self
             .db
@@ -79,18 +80,17 @@ impl ClinicalImpressionStore {
         let values = store.get_all(None, None)?.await?;
 
         let mut impressions = Vec::new();
-        for value in values.iter() {
-            if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone()) {
-                if let Ok(impression) = crate::salud_note::SaludNote::parse_fhir(&note) {
+        for value in &values {
+            if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone())
+                && let Ok(impression) = crate::salud_note::SaludNote::parse_fhir(&note) {
                     impressions.push(impression);
                 }
-            }
         }
 
         Ok(impressions)
     }
 
-    /// Get all clinical impression notes (raw NostrNotes)
+    /// Get all clinical impression notes (raw `NostrNotes`)
     pub async fn get_all_notes(&self) -> Result<Vec<nostr_minions::nostro2::NostrNote>, AppError> {
         let tx = self
             .db
@@ -101,7 +101,7 @@ impl ClinicalImpressionStore {
         let values = store.get_all(None, None)?.await?;
 
         let mut notes = Vec::new();
-        for value in values.iter() {
+        for value in &values {
             if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone()) {
                 notes.push(note);
             }
@@ -117,7 +117,7 @@ impl ClinicalImpressionStore {
     ) -> Result<Vec<ClinicalImpression>, AppError> {
         let all_impressions = self.get_all().await?;
 
-        let encounter_ref = format!("Encounter/{}", encounter_id);
+        let encounter_ref = format!("Encounter/{encounter_id}");
 
         let filtered: Vec<ClinicalImpression> = all_impressions
             .into_iter()
@@ -125,8 +125,7 @@ impl ClinicalImpressionStore {
                 impression
                     .encounter
                     .as_ref()
-                    .and_then(|e| e.reference.as_ref())
-                    .map_or(false, |r| r == &encounter_ref)
+                    .and_then(|e| e.reference.as_ref()) == Some(&encounter_ref)
             })
             .collect();
 
@@ -208,9 +207,9 @@ pub fn clinical_impression_store_provider(props: &ClinicalImpressionStoreProvide
     }
 
     let context = ClinicalImpressionStoreContext {
-        store: store.clone(),
-        version: version.clone(),
-        notes_cache: notes_cache.clone(),
+        store,
+        version,
+        notes_cache,
     };
 
     html! {
@@ -242,14 +241,14 @@ pub fn use_notify_clinical_impressions_changed() -> Callback<()> {
     let context = use_context::<ClinicalImpressionStoreContext>()
         .expect("ClinicalImpressionStoreContext not found");
 
-    let version = context.version.clone();
+    let version = context.version;
 
-    Callback::from(move |_| {
+    Callback::from(move |()| {
         version.set(*version + 1);
     })
 }
 
-/// Hook to access raw clinical impression NostrNotes
+/// Hook to access raw clinical impression `NostrNotes`
 #[hook]
 pub fn use_clinical_impression_notes() -> Vec<nostr_minions::nostro2::NostrNote> {
     let context = use_context::<ClinicalImpressionStoreContext>()
@@ -263,8 +262,11 @@ pub fn use_clinical_impression_note(id: &str) -> Option<nostr_minions::nostro2::
     let notes = use_clinical_impression_notes();
     let id = id.to_string();
     notes.into_iter().find(|note| {
-        if let Ok(impression) = crate::salud_note::SaludNote::parse_fhir::<ClinicalImpression>(note) {
-            impression.id.as_ref().map_or(false, |impression_id| impression_id == &id)
+        if let Ok(impression) = crate::salud_note::SaludNote::parse_fhir::<ClinicalImpression>(note)
+        {
+            impression
+                .id
+                .as_ref() == Some(&id)
         } else {
             false
         }

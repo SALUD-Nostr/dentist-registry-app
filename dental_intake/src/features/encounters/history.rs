@@ -7,8 +7,8 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::components::{Button, ButtonVariant, ButtonSize};
 use crate::components::typography::{MutedText, NormalText, Title};
+use crate::components::{Button, ButtonSize, ButtonVariant};
 
 // Pagination page size
 const PAGE_SIZE: usize = 10;

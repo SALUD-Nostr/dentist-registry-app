@@ -10,7 +10,7 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::components::typography::{Title, Subtitle, Label, MutedText, NormalText};
+use crate::components::typography::{Label, MutedText, NormalText, Subtitle, Title};
 
 #[derive(Properties, PartialEq, Eq)]
 pub struct EncounterDetailProps {
@@ -172,7 +172,7 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
         })
     };
 
-let handle_mark_cancelled = {
+    let handle_mark_cancelled = {
         let encounter = encounter.clone();
         let encounter_store = encounter_store.clone();
         let encounter_id = props.encounter_id.clone();
@@ -285,14 +285,14 @@ let handle_mark_cancelled = {
                 } else  {
                     <div class="grid gap-4">
                         // Encounter Information
-                        <EncounterDetailCard 
-                            encounter={encounter.clone()} 
-                            patient={patient.clone()} 
+                        <EncounterDetailCard
+                            encounter={encounter.clone()}
+                            patient={patient.clone()}
                             on_mark_cancelled={handle_mark_cancelled}
                             on_mark_completed={handle_mark_completed}
                         />
 
-                        
+
 
                         // Clinical Impressions Card
                         <shady_minions::ui::Card class="!border-0 !shadow-none">
@@ -396,7 +396,12 @@ struct EncounterDetailCardProps {
 
 #[function_component(EncounterDetailCard)]
 fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
-    let EncounterDetailCardProps { encounter, patient, on_mark_cancelled, on_mark_completed } = props;
+    let EncounterDetailCardProps {
+        encounter,
+        patient,
+        on_mark_cancelled,
+        on_mark_completed,
+    } = props;
     let Some(period) = encounter.period.as_ref() else {
         return html! {};
     };

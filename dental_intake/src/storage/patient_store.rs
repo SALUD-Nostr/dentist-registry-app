@@ -1,9 +1,7 @@
-//! Patient storage using IndexedDB
+//! Patient storage using `IndexedDB`
 
 use gloo_console::log;
-use idb::{
-    Database, Factory, TransactionMode,
-};
+use idb::{Database, Factory, TransactionMode};
 use salud_types::Patient;
 use serde_wasm_bindgen::{from_value, to_value};
 use std::rc::Rc;
@@ -39,8 +37,7 @@ impl PatientStore {
                 .store_names()
                 .iter()
                 .any(|name| name == stores::PATIENTS)
-            {
-                if let Ok(store) =
+                && let Ok(store) =
                     database.create_object_store(stores::PATIENTS, idb::ObjectStoreParams::new())
                 {
                     let mut params = idb::IndexParams::new();
@@ -51,15 +48,13 @@ impl PatientStore {
                         gloo_console::error!("Error creating index:", format!("{:?}", e));
                     }
                 }
-            }
 
             // Create encounters object store
             if !database
                 .store_names()
                 .iter()
                 .any(|name| name == stores::ENCOUNTERS)
-            {
-                if let Ok(store) =
+                && let Ok(store) =
                     database.create_object_store(stores::ENCOUNTERS, idb::ObjectStoreParams::new())
                 {
                     let mut id_params = idb::IndexParams::new();
@@ -80,15 +75,13 @@ impl PatientStore {
                         gloo_console::error!("Error creating index:", format!("{:?}", e));
                     }
                 }
-            }
 
             // Create clinical impressions object store
             if !database
                 .store_names()
                 .iter()
                 .any(|name| name == stores::CLINICAL_IMPRESSIONS)
-            {
-                if let Ok(store) = database.create_object_store(
+                && let Ok(store) = database.create_object_store(
                     stores::CLINICAL_IMPRESSIONS,
                     idb::ObjectStoreParams::new(),
                 ) {
@@ -110,7 +103,6 @@ impl PatientStore {
                         gloo_console::error!("Error creating index:", format!("{:?}", e));
                     }
                 }
-            }
         });
 
         let db = open_request.await?;
@@ -175,18 +167,17 @@ impl PatientStore {
         let values = store.get_all(None, None)?.await?;
 
         let mut patients = Vec::new();
-        for value in values.iter() {
-            if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone()) {
-                if let Ok(patient) = crate::salud_note::SaludNote::parse_fhir(&note) {
+        for value in &values {
+            if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone())
+                && let Ok(patient) = crate::salud_note::SaludNote::parse_fhir(&note) {
                     patients.push(patient);
                 }
-            }
         }
 
         Ok(patients)
     }
 
-    /// Get all patient notes (raw NostrNotes)
+    /// Get all patient notes (raw `NostrNotes`)
     pub async fn get_all_notes(&self) -> Result<Vec<nostr_minions::nostro2::NostrNote>, AppError> {
         let tx = self
             .db
@@ -197,7 +188,7 @@ impl PatientStore {
         let values = store.get_all(None, None)?.await?;
 
         let mut notes = Vec::new();
-        for value in values.iter() {
+        for value in &values {
             if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone()) {
                 notes.push(note);
             }
@@ -288,7 +279,7 @@ pub fn patient_store_provider(props: &PatientStoreProviderProps) -> Html {
     // Initialize store
     {
         let store = store.clone();
-        use_effect_with((), move |_| {
+        use_effect_with((), move |()| {
             wasm_bindgen_futures::spawn_local(async move {
                 match PatientStore::new().await {
                     Ok(db) => {
@@ -337,8 +328,8 @@ pub fn patient_store_provider(props: &PatientStoreProviderProps) -> Html {
     if let Some(store) = (*store).as_ref() {
         let context = PatientStoreContext {
             store: store.clone(),
-            version: version.clone(),
-            notes_cache: notes_cache.clone(),
+            version,
+            notes_cache,
         };
 
         html! {
@@ -374,21 +365,19 @@ pub fn use_patient_store_version() -> u32 {
 /// Hook to notify that patients have been updated
 #[hook]
 pub fn use_notify_patients_changed() -> Callback<()> {
-    let context = use_context::<PatientStoreContext>()
-        .expect("PatientStoreContext not found");
+    let context = use_context::<PatientStoreContext>().expect("PatientStoreContext not found");
 
-    let version = context.version.clone();
+    let version = context.version;
 
-    Callback::from(move |_| {
+    Callback::from(move |()| {
         version.set(*version + 1);
     })
 }
 
-/// Hook to access raw patient NostrNotes
+/// Hook to access raw patient `NostrNotes`
 #[hook]
 pub fn use_patient_notes() -> Vec<nostr_minions::nostro2::NostrNote> {
-    let context = use_context::<PatientStoreContext>()
-        .expect("PatientStoreContext not found");
+    let context = use_context::<PatientStoreContext>().expect("PatientStoreContext not found");
     (*context.notes_cache).clone()
 }
 
@@ -399,7 +388,9 @@ pub fn use_patient_note(id: &str) -> Option<nostr_minions::nostro2::NostrNote> {
     let id = id.to_string();
     notes.into_iter().find(|note| {
         if let Ok(patient) = crate::salud_note::SaludNote::parse_fhir::<Patient>(note) {
-            patient.id.as_ref().map_or(false, |patient_id| patient_id == &id)
+            patient
+                .id
+                .as_ref() == Some(&id)
         } else {
             false
         }
