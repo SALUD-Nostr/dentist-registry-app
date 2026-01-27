@@ -11,6 +11,7 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::components::{Button, ButtonVariant, ButtonSize};
 use crate::components::typography::{Title, Subtitle, MutedText, Label};
 
 #[derive(Properties, PartialEq, Eq)]
@@ -319,14 +320,14 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
                                     <Label class="text-foreground">
                                         {"Hallazgos y Diagnósticos"}
                                     </Label>
-                                    <button
-                                        type="button"
-                                        onclick={on_add_finding}
-                                        class="text-sm text-primary hover:text-primary/80 flex items-center gap-1"
+                                    <Button
+                                        variant={ButtonVariant::Text}
+                                        size={ButtonSize::Small}
+                                        onclick={Some(on_add_finding)}
                                     >
                                         <crate::components::Plus class="size-4" />
                                         {"Agregar hallazgo"}
-                                    </button>
+                                    </Button>
                                 </div>
                                 <div class="space-y-3">
                                     { for (*findings).iter().enumerate().map(|(index, finding)| {
@@ -355,13 +356,14 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
                                                     class="flex-1 px-3 py-2 border border-muted rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                                                 />
                                                 if (*findings).len() > 1 {
-                                                    <button
-                                                        type="button"
-                                                        onclick={on_remove}
-                                                        class="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    <Button
+                                                        variant={ButtonVariant::Destructive}
+                                                        size={ButtonSize::Small}
+                                                        onclick={Some(on_remove)}
+                                                        class="!px-2 !py-2"
                                                     >
                                                         <crate::components::X class="size-5" />
-                                                    </button>
+                                                    </Button>
                                                 }
                                             </div>
                                         }
@@ -415,27 +417,26 @@ pub fn clinical_impression_form(props: &ClinicalImpressionFormProps) -> Html {
 
                             // Action buttons
                             <div class="flex justify-end gap-3 pt-4 border-t border-muted">
-                                <button
-                                    type="button"
-                                    onclick={handle_cancel}
+                                <Button
+                                    variant={ButtonVariant::Outline}
+                                    size={ButtonSize::Medium}
+                                    onclick={Some(handle_cancel)}
                                     disabled={*is_saving}
-                                    class="px-4 py-2 border border-muted text-foreground rounded-lg hover:bg-muted/10 transition-colors disabled:opacity-50"
                                 >
                                     {"Cancelar"}
-                                </button>
-                                <button
-                                    type="submit"
+                                </Button>
+                                <Button
+                                    variant={ButtonVariant::Primary}
+                                    size={ButtonSize::Medium}
+                                    button_type="submit".to_string()
+                                    loading={*is_saving}
                                     disabled={*is_saving}
-                                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
                                 >
-                                    if *is_saving {
-                                        <div class="size-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        {"Guardando..."}
-                                    } else {
+                                    if !*is_saving {
                                         <crate::components::Check class="size-5" />
-                                        {"Guardar Impresión"}
                                     }
-                                </button>
+                                    {if *is_saving { "Guardando..." } else { "Guardar Impresión" }}
+                                </Button>
                             </div>
                         </div>
                     </shady_minions::ui::Card>

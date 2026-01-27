@@ -10,6 +10,7 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::components::{Button, ButtonVariant, ButtonSize};
 use crate::components::typography::{Title, Subtitle, Label, MutedText, NormalText};
 
 #[derive(Clone, PartialEq)]
@@ -516,22 +517,24 @@ pub fn encounter_form() -> Html {
                             }
 
                             <div class="flex justify-end gap-3 pt-4 border-t border-muted">
-                                <button
-                                    onclick={handle_cancel.clone()}
-                                    class="px-4 py-2 border border-muted text-foreground rounded-lg hover:bg-muted/10 transition-colors"
+                                <Button
+                                    variant={ButtonVariant::Outline}
+                                    size={ButtonSize::Medium}
+                                    onclick={Some(handle_cancel.clone())}
                                 >
                                     {"Cancelar"}
-                                </button>
-                                <button
-                                    onclick={handle_next_to_confirmation.clone()}
+                                </Button>
+                                <Button
+                                    variant={ButtonVariant::Primary}
+                                    size={ButtonSize::Medium}
+                                    onclick={Some(handle_next_to_confirmation.clone())}
                                     disabled={(*selected_patient).is_none()}
-                                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {"Siguiente"}
-                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                     </svg>
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     } else if *current_step == FormStep::SelectDateTime {
@@ -660,24 +663,26 @@ pub fn encounter_form() -> Html {
                             </div>
 
                             <div class="flex justify-between gap-3 pt-4 border-t border-muted">
-                                <button
-                                    onclick={handle_back_to_patient}
-                                    class="px-4 py-2 border border-muted text-foreground rounded-lg hover:bg-muted/10 transition-colors flex items-center gap-2"
+                                <Button
+                                    variant={ButtonVariant::Outline}
+                                    size={ButtonSize::Medium}
+                                    onclick={Some(handle_back_to_patient)}
                                 >
-                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                                     </svg>
                                     {"Anterior"}
-                                </button>
-                                <button
-                                    onclick={handle_next_to_confirmation}
-                                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
+                                </Button>
+                                <Button
+                                    variant={ButtonVariant::Primary}
+                                    size={ButtonSize::Medium}
+                                    onclick={Some(handle_next_to_confirmation)}
                                 >
                                     {"Siguiente"}
-                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                     </svg>
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     } else {
@@ -751,33 +756,29 @@ pub fn encounter_form() -> Html {
                             }
 
                             <div class="flex justify-between gap-3 pt-4 border-t border-muted">
-                                <button
-                                    onclick={handle_back_to_datetime}
+                                <Button
+                                    variant={ButtonVariant::Outline}
+                                    size={ButtonSize::Medium}
+                                    onclick={Some(handle_back_to_datetime)}
                                     disabled={*is_saving}
-                                    class="px-4 py-2 border border-muted text-foreground rounded-lg hover:bg-muted/10 transition-colors flex items-center gap-2 disabled:opacity-50"
                                 >
-                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                                     </svg>
                                     {"Anterior"}
-                                </button>
-                                <button
-                                    onclick={handle_submit}
+                                </Button>
+                                <Button
+                                    variant={ButtonVariant::Primary}
+                                    size={ButtonSize::Medium}
+                                    onclick={Some(handle_submit)}
+                                    loading={*is_saving}
                                     disabled={*is_saving}
-                                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
-                                    if *is_saving {
-                                        <>
-                                            <div class="size-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                            {"Agendando..."}
-                                        </>
-                                    } else {
-                                        <>
-                                            <crate::components::Check class="size-5" />
-                                            {"Agendar Cita"}
-                                        </>
+                                    if !*is_saving {
+                                        <crate::components::Check class="size-5" />
                                     }
-                                </button>
+                                    {if *is_saving { "Agendando..." } else { "Agendar Cita" }}
+                                </Button>
                             </div>
                         </div>
                     }

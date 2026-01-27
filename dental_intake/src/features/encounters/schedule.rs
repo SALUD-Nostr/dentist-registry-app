@@ -7,6 +7,7 @@ use wasm_bindgen::JsValue;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::components::{Button, ButtonVariant, ButtonSize};
 use crate::components::typography::Title;
 
 #[function_component(EncountersSchedule)]
@@ -115,13 +116,14 @@ pub fn encounters_schedule() -> Html {
             <div class="mx-auto size-full flex flex-col">
                 <div class="flex justify-between items-center mb-6">
                     <Title>{"Calendario de Citas"}</Title>
-                    <button
-                        onclick={handle_new_encounter}
-                        class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center gap-2"
+                    <Button
+                        variant={ButtonVariant::Primary}
+                        size={ButtonSize::Medium}
+                        onclick={Some(handle_new_encounter)}
                     >
                         <crate::components::Plus class="size-5" />
                         {"Nueva Cita"}
-                    </button>
+                    </Button>
                 </div>
 
                 <shady_minions::ui::Card class="flex-1 !p-0 !max-w-none !border-0 !shadow-none max-h-[85vh]">

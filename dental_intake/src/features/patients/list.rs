@@ -6,6 +6,7 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::components::{Button, ButtonVariant, ButtonSize};
 use crate::components::typography::{Title, NormalText, MutedText};
 
 #[function_component(PatientsList)]
@@ -137,27 +138,14 @@ pub fn patients_list() -> Html {
                             "duration-150",
                         )}
                     />
-                    <button
-                        onclick={handle_new_patient}
-                        class={classes!(
-                            "flex",
-                            "items-center",
-                            "gap-2",
-                            "px-4",
-                            "py-2",
-                            "bg-primary",
-                            "text-white",
-                            "rounded-lg",
-                            "hover:bg-primary/90",
-                            "transition-colors",
-                            "text-sm",
-                            "font-medium",
-                            "whitespace-nowrap",
-                        )}
+                    <Button
+                        variant={ButtonVariant::Primary}
+                        size={ButtonSize::Medium}
+                        onclick={Some(handle_new_patient)}
                     >
-                        <crate::components::Plus class="size-4" />
+                        <crate::components::Plus class="size-5" />
                         {"Nuevo Paciente"}
-                    </button>
+                    </Button>
                 </div>
             </div>
 

@@ -7,6 +7,7 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::components::{Button, ButtonVariant, ButtonSize};
 use crate::components::typography::{MutedText, NormalText, Title};
 
 // Pagination page size
@@ -415,47 +416,25 @@ pub fn encounters_history() -> Html {
             // Pagination
             if *total_count > PAGE_SIZE {
                 <div class="flex justify-center items-center gap-4">
-                    <button
-                        onclick={prev_page}
+                    <Button
+                        variant={ButtonVariant::Outline}
+                        size={ButtonSize::Medium}
+                        onclick={Some(prev_page)}
                         disabled={*page == 0}
-                        class={classes!(
-                            "px-4",
-                            "py-2",
-                            "rounded-lg",
-                            "border",
-                            "border-muted",
-                            "transition-colors",
-                            if *page == 0 {
-                                "opacity-50 cursor-not-allowed"
-                            } else {
-                                "hover:bg-primary/10"
-                            }
-                        )}
                     >
                         {"← Anterior"}
-                    </button>
+                    </Button>
                     <MutedText>
                         {format!("Página {} de {}", *page + 1, total_pages)}
                     </MutedText>
-                    <button
-                        onclick={next_page}
+                    <Button
+                        variant={ButtonVariant::Outline}
+                        size={ButtonSize::Medium}
+                        onclick={Some(next_page)}
                         disabled={*page >= total_pages - 1}
-                        class={classes!(
-                            "px-4",
-                            "py-2",
-                            "rounded-lg",
-                            "border",
-                            "border-muted",
-                            "transition-colors",
-                            if *page >= total_pages - 1 {
-                                "opacity-50 cursor-not-allowed"
-                            } else {
-                                "hover:bg-primary/10"
-                            }
-                        )}
                     >
                         {"Siguiente →"}
-                    </button>
+                    </Button>
                 </div>
             }
         </div>

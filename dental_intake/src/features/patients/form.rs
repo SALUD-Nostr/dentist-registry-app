@@ -11,6 +11,7 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::components::{Button, ButtonVariant, ButtonSize};
 use crate::components::typography::{Title, Subtitle, Label};
 
 #[function_component(PatientForm)]
@@ -531,27 +532,26 @@ pub fn patient_form() -> Html {
 
                             // Form Actions
                             <div class="flex justify-end gap-3 pt-4 border-t border-muted">
-                                <button
-                                    type="button"
-                                    onclick={handle_cancel}
-                                    class="px-4 py-2 border border-muted text-foreground rounded-lg hover:bg-muted/10 transition-colors"
+                                <Button
+                                    variant={ButtonVariant::Outline}
+                                    size={ButtonSize::Medium}
+                                    onclick={Some(handle_cancel)}
                                     disabled={*is_saving}
                                 >
                                     {"Cancelar"}
-                                </button>
-                                <button
-                                    type="submit"
+                                </Button>
+                                <Button
+                                    variant={ButtonVariant::Primary}
+                                    size={ButtonSize::Medium}
+                                    button_type="submit".to_string()
+                                    loading={*is_saving}
                                     disabled={*is_saving}
-                                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
-                                    if *is_saving {
-                                        <div class="size-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        {"Guardando..."}
-                                    } else {
+                                    if !*is_saving {
                                         <crate::components::Check class="size-5" />
-                                        {"Guardar Paciente"}
                                     }
-                                </button>
+                                    {if *is_saving { "Guardando..." } else { "Guardar Paciente" }}
+                                </Button>
                             </div>
                         </div>
                     </shady_minions::ui::Card>
