@@ -112,7 +112,7 @@ pub fn encounters_schedule() -> Html {
 
     html! {
         <div class="flex flex-col size-full p-4">
-            <div class="max-w-7xl mx-auto w-full h-full flex flex-col">
+            <div class="mx-auto size-full flex flex-col">
                 <div class="flex justify-between items-center mb-6">
                     <Title>{"Calendario de Citas"}</Title>
                     <button
@@ -124,7 +124,7 @@ pub fn encounters_schedule() -> Html {
                     </button>
                 </div>
 
-                <shady_minions::ui::Card class="flex-1 !p-0 !max-w-none !border-0 !shadow-none ">
+                <shady_minions::ui::Card class="flex-1 !p-0 !max-w-none !border-0 !shadow-none max-h-[85vh]">
                     <style>
                         {r"
                         .fc-header-toolbar {
