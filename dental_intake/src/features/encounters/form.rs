@@ -1,6 +1,6 @@
 //! Encounter scheduling form - multi-step
 
-use chrono::{Local, NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::{Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone};
 use gloo_console::log;
 use salud_types::{
     CodeableConcept, EncounterBuilder, EncounterClass, EncounterStatus, Patient, Period, Reference,
@@ -41,7 +41,7 @@ pub fn encounter_form() -> Html {
         tomorrow.format("%Y-%m-%d").to_string()
     });
     let appointment_time = use_state(|| "09:00".to_string());
-    let appointment_duration = use_state(|| 30); // minutes
+    let appointment_end_time = use_state(|| "09:30".to_string());
     let appointment_class = use_state(|| EncounterClass::Ambulatory);
     let appointment_reason = use_state(String::new);
 
@@ -123,7 +123,7 @@ pub fn encounter_form() -> Html {
         let selected_patient = selected_patient.clone();
         let appointment_date = appointment_date.clone();
         let appointment_time = appointment_time.clone();
-        let appointment_duration = appointment_duration.clone();
+        let appointment_end_time = appointment_end_time.clone();
         let appointment_class = appointment_class.clone();
         let appointment_reason = appointment_reason.clone();
         let is_saving = is_saving.clone();
@@ -150,7 +150,7 @@ pub fn encounter_form() -> Html {
             let patient_id = patient_id.clone();
             let date_str = (*appointment_date).clone();
             let time_str = (*appointment_time).clone();
-            let duration = *appointment_duration;
+            let end_time_str = (*appointment_end_time).clone();
             let class = (*appointment_class).clone();
             let reason = (*appointment_reason).clone();
             let is_saving = is_saving.clone();
@@ -170,23 +170,54 @@ pub fn encounter_form() -> Html {
                     }
                 };
 
-                let time = match NaiveTime::parse_from_str(&time_str, "%H:%M") {
+                let start_time = match NaiveTime::parse_from_str(&time_str, "%H:%M") {
                     Ok(t) => t,
                     Err(e) => {
-                        log!("Error parsing time:", format!("{:?}", e));
-                        errors.set(vec!["Hora inválida".to_string()]);
+                        log!("Error parsing start time:", format!("{:?}", e));
+                        errors.set(vec!["Hora de inicio inválida".to_string()]);
                         is_saving.set(false);
                         return;
                     }
                 };
 
-                let start = NaiveDateTime::new(date, time);
-                let end = start + chrono::Duration::minutes(duration.into());
+                let end_time = match NaiveTime::parse_from_str(&end_time_str, "%H:%M") {
+                    Ok(t) => t,
+                    Err(e) => {
+                        log!("Error parsing end time:", format!("{:?}", e));
+                        errors.set(vec!["Hora de fin inválida".to_string()]);
+                        is_saving.set(false);
+                        return;
+                    }
+                };
+
+                // Validate end time is after start time
+                if end_time <= start_time {
+                    errors.set(vec!["La hora de fin debe ser después de la hora de inicio".to_string()]);
+                    is_saving.set(false);
+                    return;
+                }
+
+                let start_naive = NaiveDateTime::new(date, start_time);
+                let end_naive = NaiveDateTime::new(date, end_time);
+
+                // Convert from local time to UTC
+                // Create a local datetime first, then convert to UTC
+                let start_local = Local.from_local_datetime(&start_naive).single();
+                let end_local = Local.from_local_datetime(&end_naive).single();
+
+                let (start_utc, end_utc) = match (start_local, end_local) {
+                    (Some(start), Some(end)) => (start.with_timezone(&chrono::Utc), end.with_timezone(&chrono::Utc)),
+                    _ => {
+                        errors.set(vec!["Error al convertir zona horaria".to_string()]);
+                        is_saving.set(false);
+                        return;
+                    }
+                };
 
                 // Build Period
                 let period = Period {
-                    start: Some(start.and_utc()),
-                    end: Some(end.and_utc()),
+                    start: Some(start_utc),
+                    end: Some(end_utc),
                 };
 
                 // Build Reference
@@ -552,31 +583,23 @@ pub fn encounter_form() -> Html {
                                     />
                                 </div>
 
-                                // Duration
+                                // End Time
                                 <div>
                                     <Label class="mb-2">
-                                        {"Duración (minutos)"}
+                                        {"Hora de Fin"}<span class="text-red-500">{"*"}</span>
                                     </Label>
-                                    <select
-                                        value={(*appointment_duration).to_string()}
-                                        onchange={
-                                            let appointment_duration = appointment_duration.clone();
-                                            Callback::from(move |e: Event| {
-                                                let select: web_sys::HtmlSelectElement = e.target_unchecked_into();
-                                                if let Ok(val) = select.value().parse::<i64>() {
-                                                    appointment_duration.set(val);
-                                                }
+                                    <input
+                                        type="time"
+                                        value={(*appointment_end_time).clone()}
+                                        oninput={
+                                            let appointment_end_time = appointment_end_time.clone();
+                                            Callback::from(move |e: InputEvent| {
+                                                let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+                                                appointment_end_time.set(input.value());
                                             })
                                         }
                                         class="w-full px-3 py-2 border border-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                                    >
-                                        <option value="15">{"15 minutos"}</option>
-                                        <option value="30">{"30 minutos"}</option>
-                                        <option value="45">{"45 minutos"}</option>
-                                        <option value="60">{"1 hora"}</option>
-                                        <option value="90">{"1.5 horas"}</option>
-                                        <option value="120">{"2 horas"}</option>
-                                    </select>
+                                    />
                                 </div>
 
                                 // Encounter Class
@@ -696,14 +719,6 @@ pub fn encounter_form() -> Html {
                                                 </NormalText>
                                             </div>
                                             <div>
-                                                <MutedText class="text-xs mb-1">{"Hora"}</MutedText>
-                                                <NormalText>{(*appointment_time).clone()}</NormalText>
-                                            </div>
-                                            <div>
-                                                <MutedText class="text-xs mb-1">{"Duración"}</MutedText>
-                                                <NormalText>{format!("{} min", *appointment_duration)}</NormalText>
-                                            </div>
-                                            <div>
                                                 <MutedText class="text-xs mb-1">{"Tipo"}</MutedText>
                                                 <NormalText>
                                                     {match *appointment_class {
@@ -713,6 +728,14 @@ pub fn encounter_form() -> Html {
                                                         _ => "Consulta Ambulatoria",
                                                     }}
                                                 </NormalText>
+                                            </div>
+                                            <div>
+                                                <MutedText class="text-xs mb-1">{"Hora de Inicio"}</MutedText>
+                                                <NormalText>{(*appointment_time).clone()}</NormalText>
+                                            </div>
+                                            <div>
+                                                <MutedText class="text-xs mb-1">{"Hora de Fin"}</MutedText>
+                                                <NormalText>{(*appointment_end_time).clone()}</NormalText>
                                             </div>
                                         </div>
                                     </div>
