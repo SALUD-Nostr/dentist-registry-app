@@ -63,23 +63,8 @@ pub fn encounters_history() -> Html {
                         format!("{} total", all_encounters.len())
                     );
 
-                    // Filter: show historical and ongoing encounters (exclude only Planned)
-                    let mut filtered: Vec<Encounter> = all_encounters
-                        .into_iter()
-                        .filter(|encounter| {
-                            // Include ongoing (InProgress, Arrived, Triaged) and completed (Finished, Cancelled)
-                            matches!(
-                                encounter.status,
-                                EncounterStatus::InProgress
-                                    | EncounterStatus::Arrived
-                                    | EncounterStatus::Triaged
-                                    | EncounterStatus::Finished
-                                    | EncounterStatus::Cancelled
-                                    | EncounterStatus::Onleave
-                                    | EncounterStatus::EnteredInError
-                            )
-                        })
-                        .collect();
+                    // Show all encounters regardless of status
+                    let mut filtered: Vec<Encounter> = all_encounters;
 
                     // Apply search filter
                     if !query.trim().is_empty() {
