@@ -39,15 +39,15 @@ impl PatientStore {
                 .any(|name| name == stores::PATIENTS)
                 && let Ok(store) =
                     database.create_object_store(stores::PATIENTS, idb::ObjectStoreParams::new())
+            {
+                let mut params = idb::IndexParams::new();
+                params.unique(true);
+                if let Err(e) =
+                    store.create_index("by_id", idb::KeyPath::new_single("id"), Some(params))
                 {
-                    let mut params = idb::IndexParams::new();
-                    params.unique(true);
-                    if let Err(e) =
-                        store.create_index("by_id", idb::KeyPath::new_single("id"), Some(params))
-                    {
-                        gloo_console::error!("Error creating index:", format!("{:?}", e));
-                    }
+                    gloo_console::error!("Error creating index:", format!("{:?}", e));
                 }
+            }
 
             // Create encounters object store
             if !database
@@ -56,25 +56,25 @@ impl PatientStore {
                 .any(|name| name == stores::ENCOUNTERS)
                 && let Ok(store) =
                     database.create_object_store(stores::ENCOUNTERS, idb::ObjectStoreParams::new())
+            {
+                let mut id_params = idb::IndexParams::new();
+                id_params.unique(true);
+                if let Err(e) =
+                    store.create_index("by_id", idb::KeyPath::new_single("id"), Some(id_params))
                 {
-                    let mut id_params = idb::IndexParams::new();
-                    id_params.unique(true);
-                    if let Err(e) =
-                        store.create_index("by_id", idb::KeyPath::new_single("id"), Some(id_params))
-                    {
-                        gloo_console::error!("Error creating index:", format!("{:?}", e));
-                    }
-
-                    let mut patient_params = idb::IndexParams::new();
-                    patient_params.unique(false);
-                    if let Err(e) = store.create_index(
-                        "by_patient",
-                        idb::KeyPath::new_single("subject.reference"),
-                        Some(patient_params),
-                    ) {
-                        gloo_console::error!("Error creating index:", format!("{:?}", e));
-                    }
+                    gloo_console::error!("Error creating index:", format!("{:?}", e));
                 }
+
+                let mut patient_params = idb::IndexParams::new();
+                patient_params.unique(false);
+                if let Err(e) = store.create_index(
+                    "by_patient",
+                    idb::KeyPath::new_single("subject.reference"),
+                    Some(patient_params),
+                ) {
+                    gloo_console::error!("Error creating index:", format!("{:?}", e));
+                }
+            }
 
             // Create clinical impressions object store
             if !database
@@ -84,25 +84,26 @@ impl PatientStore {
                 && let Ok(store) = database.create_object_store(
                     stores::CLINICAL_IMPRESSIONS,
                     idb::ObjectStoreParams::new(),
-                ) {
-                    let mut id_params = idb::IndexParams::new();
-                    id_params.unique(true);
-                    if let Err(e) =
-                        store.create_index("by_id", idb::KeyPath::new_single("id"), Some(id_params))
-                    {
-                        gloo_console::error!("Error creating index:", format!("{:?}", e));
-                    }
-
-                    let mut encounter_params = idb::IndexParams::new();
-                    encounter_params.unique(false);
-                    if let Err(e) = store.create_index(
-                        "by_encounter",
-                        idb::KeyPath::new_single("encounter.reference"),
-                        Some(encounter_params),
-                    ) {
-                        gloo_console::error!("Error creating index:", format!("{:?}", e));
-                    }
+                )
+            {
+                let mut id_params = idb::IndexParams::new();
+                id_params.unique(true);
+                if let Err(e) =
+                    store.create_index("by_id", idb::KeyPath::new_single("id"), Some(id_params))
+                {
+                    gloo_console::error!("Error creating index:", format!("{:?}", e));
                 }
+
+                let mut encounter_params = idb::IndexParams::new();
+                encounter_params.unique(false);
+                if let Err(e) = store.create_index(
+                    "by_encounter",
+                    idb::KeyPath::new_single("encounter.reference"),
+                    Some(encounter_params),
+                ) {
+                    gloo_console::error!("Error creating index:", format!("{:?}", e));
+                }
+            }
         });
 
         let db = open_request.await?;
@@ -169,9 +170,10 @@ impl PatientStore {
         let mut patients = Vec::new();
         for value in &values {
             if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone())
-                && let Ok(patient) = crate::salud_note::SaludNote::parse_fhir(&note) {
-                    patients.push(patient);
-                }
+                && let Ok(patient) = crate::salud_note::SaludNote::parse_fhir(&note)
+            {
+                patients.push(patient);
+            }
         }
 
         Ok(patients)
@@ -388,9 +390,7 @@ pub fn use_patient_note(id: &str) -> Option<nostr_minions::nostro2::NostrNote> {
     let id = id.to_string();
     notes.into_iter().find(|note| {
         if let Ok(patient) = crate::salud_note::SaludNote::parse_fhir::<Patient>(note) {
-            patient
-                .id
-                .as_ref() == Some(&id)
+            patient.id.as_ref() == Some(&id)
         } else {
             false
         }

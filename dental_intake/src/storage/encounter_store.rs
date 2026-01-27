@@ -18,7 +18,8 @@ pub struct EncounterStore {
 
 impl EncounterStore {
     /// Create from existing database
-    #[must_use] pub const fn from_db(db: Rc<Database>) -> Self {
+    #[must_use]
+    pub const fn from_db(db: Rc<Database>) -> Self {
         Self { db }
     }
 
@@ -81,9 +82,10 @@ impl EncounterStore {
         let mut encounters = Vec::new();
         for value in &values {
             if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone())
-                && let Ok(encounter) = crate::salud_note::SaludNote::parse_fhir(&note) {
-                    encounters.push(encounter);
-                }
+                && let Ok(encounter) = crate::salud_note::SaludNote::parse_fhir(&note)
+            {
+                encounters.push(encounter);
+            }
         }
 
         Ok(encounters)
@@ -117,12 +119,7 @@ impl EncounterStore {
 
         let filtered: Vec<Encounter> = all_encounters
             .into_iter()
-            .filter(|encounter| {
-                encounter
-                    .subject
-                    .reference
-                    .as_ref() == Some(&patient_ref)
-            })
+            .filter(|encounter| encounter.subject.reference.as_ref() == Some(&patient_ref))
             .collect();
 
         Ok(filtered)
@@ -254,9 +251,7 @@ pub fn use_encounter_note(id: &str) -> Option<nostr_minions::nostro2::NostrNote>
     let id = id.to_string();
     notes.into_iter().find(|note| {
         if let Ok(encounter) = crate::salud_note::SaludNote::parse_fhir::<Encounter>(note) {
-            encounter
-                .id
-                .as_ref() == Some(&id)
+            encounter.id.as_ref() == Some(&id)
         } else {
             false
         }

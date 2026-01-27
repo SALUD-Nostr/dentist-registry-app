@@ -11,6 +11,7 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::components::typography::{Label, MutedText, NormalText, Subtitle, Title};
+use crate::components::{Button, ButtonSize, ButtonVariant};
 
 #[derive(Properties, PartialEq, Eq)]
 pub struct EncounterDetailProps {
@@ -220,12 +221,13 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
             <div class="flex flex-col items-center gap-4 py-12">
                 <crate::components::X class="size-16 text-red-600" />
                 <p class="text-red-600 font-semibold text-lg">{"No se encontró el paciente"}</p>
-                <button
-                    onclick={handle_back.clone()}
-                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                <Button
+                    variant={ButtonVariant::Primary}
+                    size={ButtonSize::Medium}
+                    onclick={Some(handle_back.clone())}
                 >
                     {"Volver al historial"}
-                </button>
+                </Button>
             </div>
         };
     };
@@ -235,12 +237,13 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
             <div class="flex flex-col items-center gap-4 py-12">
                 <crate::components::X class="size-16 text-red-600" />
                 <p class="text-red-600 font-semibold text-lg">{"No se encontró la cita"}</p>
-                <button
-                    onclick={handle_back.clone()}
-                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                <Button
+                    variant={ButtonVariant::Primary}
+                    size={ButtonSize::Medium}
+                    onclick={Some(handle_back.clone())}
                 >
                     {"Volver al historial"}
-                </button>
+                </Button>
             </div>
         };
     };
@@ -249,13 +252,15 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
         <div class="flex flex-col size-full detail-page overflow-auto">
             <div class="max-w-4xl mx-auto w-full">
                 <div class="mb-4">
-                    <button
-                        onclick={handle_back.clone()}
-                        class="flex items-center gap-2 text-muted hover:text-foreground transition-colors mb-3"
+                    <Button
+                        variant={ButtonVariant::Text}
+                        size={ButtonSize::Medium}
+                        onclick={Some(handle_back.clone())}
+                        class="mb-3"
                     >
                         <crate::components::ArrowLeft class="size-4" />
                         {"Volver al Historial"}
-                    </button>
+                    </Button>
                     <Title>
                         {"Detalles de la Cita"}
                     </Title>
@@ -274,12 +279,13 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                         <div class="flex flex-col items-center gap-4 py-12">
                             <crate::components::X class="size-16 text-red-600" />
                             <p class="text-red-600 font-semibold text-lg">{err}</p>
-                            <button
-                                onclick={handle_back.clone()}
-                                class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                            <Button
+                                variant={ButtonVariant::Primary}
+                                size={ButtonSize::Medium}
+                                onclick={Some(handle_back.clone())}
                             >
                                 {"Volver al historial"}
-                            </button>
+                            </Button>
                         </div>
                     </shady_minions::ui::Card>
                 } else  {
@@ -300,13 +306,14 @@ pub fn encounter_detail(props: &EncounterDetailProps) -> Html {
                                 <Subtitle>{"Impresiones Clínicas"}</Subtitle>
                                 {if encounter.status != EncounterStatus::Finished && encounter.status != EncounterStatus::Cancelled {
                                     html! {
-                                        <button
-                                            onclick={handle_new_impression}
-                                            class="px-3 py-1 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center gap-1"
+                                        <Button
+                                            variant={ButtonVariant::Primary}
+                                            size={ButtonSize::Small}
+                                            onclick={Some(handle_new_impression)}
                                         >
                                             <crate::components::Plus class="size-4" />
                                             {"Agregar"}
-                                        </button>
+                                        </Button>
                                     }
                                 } else {
                                     html! {}
@@ -418,20 +425,23 @@ fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
                 {if encounter.status != EncounterStatus::Finished && encounter.status != EncounterStatus::Cancelled {
                     html! {
                         <div class="flex gap-2">
-                            <button
-                                class="px-3 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2 text-sm"
-                                onclick={props.on_mark_cancelled.clone()}
+                            <Button
+                                variant={ButtonVariant::Destructive}
+                                size={ButtonSize::Small}
+                                onclick={Some(props.on_mark_cancelled.clone())}
                             >
                                 <crate::components::X class="size-4" />
                                 {"Cancelar"}
-                            </button>
-                            <button
-                                class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm"
-                                onclick={props.on_mark_completed.clone()}
+                            </Button>
+                            <Button
+                                variant={ButtonVariant::Primary}
+                                size={ButtonSize::Small}
+                                onclick={Some(props.on_mark_completed.clone())}
+                                class="!bg-gradient-to-b !from-green-600 !to-green-700 !shadow-green-600/30 hover:!shadow-green-600/40"
                             >
                                 <crate::components::Check class="size-4" />
                                 {"Completar"}
-                            </button>
+                            </Button>
                         </div>
                     }
                 } else {

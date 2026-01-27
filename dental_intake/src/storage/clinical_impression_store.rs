@@ -82,9 +82,10 @@ impl ClinicalImpressionStore {
         let mut impressions = Vec::new();
         for value in &values {
             if let Ok(note) = from_value::<nostr_minions::nostro2::NostrNote>(value.clone())
-                && let Ok(impression) = crate::salud_note::SaludNote::parse_fhir(&note) {
-                    impressions.push(impression);
-                }
+                && let Ok(impression) = crate::salud_note::SaludNote::parse_fhir(&note)
+            {
+                impressions.push(impression);
+            }
         }
 
         Ok(impressions)
@@ -125,7 +126,8 @@ impl ClinicalImpressionStore {
                 impression
                     .encounter
                     .as_ref()
-                    .and_then(|e| e.reference.as_ref()) == Some(&encounter_ref)
+                    .and_then(|e| e.reference.as_ref())
+                    == Some(&encounter_ref)
             })
             .collect();
 
@@ -264,9 +266,7 @@ pub fn use_clinical_impression_note(id: &str) -> Option<nostr_minions::nostro2::
     notes.into_iter().find(|note| {
         if let Ok(impression) = crate::salud_note::SaludNote::parse_fhir::<ClinicalImpression>(note)
         {
-            impression
-                .id
-                .as_ref() == Some(&id)
+            impression.id.as_ref() == Some(&id)
         } else {
             false
         }
