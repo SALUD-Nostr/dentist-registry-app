@@ -422,7 +422,7 @@ pub fn doctor_contact_inputs(props: &DoctorInputsProps) -> Html {
             <div class="flex flex-col gap-1 flex-1">
                 <paravida_components::inputs::Label >{ "Teléfono" }</paravida_components::inputs::Label>
                 <paravida_components::inputs::NormalInput
-                    placeholder="+123456789"
+                    placeholder="+503 7000-0000"
                     r#type="text"
                     value={phone_value}
                     oninput={phone_change}

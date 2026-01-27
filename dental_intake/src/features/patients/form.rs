@@ -400,7 +400,7 @@ pub fn patient_form() -> Html {
                                                 })
                                             }
                                             class="w-full px-3 py-2 border border-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                                            placeholder="+34 600 000 000"
+                                            placeholder="+503 7000-0000"
                                         />
                                     </div>
 
@@ -464,13 +464,13 @@ pub fn patient_form() -> Html {
                                                     })
                                                 }
                                                 class="w-full px-3 py-2 border border-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                                                placeholder="Madrid"
+                                                placeholder="San Salvador"
                                             />
                                         </div>
 
                                         <div>
                                             <Label class="block mb-2">
-                                                {"Provincia/Estado"}
+                                                {"Departamento"}
                                             </Label>
                                             <input
                                                 type="text"
@@ -483,7 +483,7 @@ pub fn patient_form() -> Html {
                                                     })
                                                 }
                                                 class="w-full px-3 py-2 border border-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                                                placeholder="Madrid"
+                                                placeholder="San Salvador"
                                             />
                                         </div>
                                     </div>
@@ -504,7 +504,7 @@ pub fn patient_form() -> Html {
                                                     })
                                                 }
                                                 class="w-full px-3 py-2 border border-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                                                placeholder="28001"
+                                                placeholder="1101"
                                             />
                                         </div>
 
@@ -523,7 +523,7 @@ pub fn patient_form() -> Html {
                                                     })
                                                 }
                                                 class="w-full px-3 py-2 border border-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                                                placeholder="España"
+                                                placeholder="El Salvador"
                                             />
                                         </div>
                                     </div>
