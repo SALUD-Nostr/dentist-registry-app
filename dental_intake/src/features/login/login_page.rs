@@ -104,7 +104,7 @@ pub fn login_page() -> Html {
                     <crate::components::Logo class="size-20 text-primary" />
                     <div class="text-center">
                         <Subtitle class="mb-2">
-                            {"Salud Dental"}
+                            {"Portal Salud"}
                         </Subtitle>
                         <MutedText>
                             {"Ingresa tu clave privada (nsec) para acceder"}

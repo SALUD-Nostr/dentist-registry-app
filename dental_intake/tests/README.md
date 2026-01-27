@@ -1,4 +1,4 @@
-# End-to-End Tests for Salud Dental
+# End-to-End Tests for Portal Salud
 
 This directory contains browser-based E2E tests using `wasm-bindgen-test`.
 

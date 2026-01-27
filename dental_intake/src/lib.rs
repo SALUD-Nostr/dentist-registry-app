@@ -1,4 +1,4 @@
-//! Salud Dental - FHIR-compliant Dental Health Management System
+//! Portal Salud - FHIR-compliant Dental Health Management System
 //!
 //! This library exposes the core modules for testing.
 

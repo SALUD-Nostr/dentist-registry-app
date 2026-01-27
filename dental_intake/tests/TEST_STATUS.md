@@ -1,4 +1,4 @@
-# E2E Test Status - Salud Dental
+# E2E Test Status - Portal Salud
 
 **Date:** 2026-01-23
 **Status:** ✅ ALL TESTS PASSING IN FIREFOX!

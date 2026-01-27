@@ -33,7 +33,7 @@ pub fn home() -> Html {
             <div class="flex flex-col items-center">
                 <crate::components::Logo class="size-12 sm:size-16 md:size-20 m-4 text-primary" />
                 <Title size="text-3xl sm:text-4xl md:text-5xl font-bold text-center">
-                    {"Salud Dental"}
+                    {"Portal Salud"}
                 </Title>
                 <MutedText class="text-center max-w-lg mt-4">
                     {"Sistema de gestión de pacientes y citas médicas"}
