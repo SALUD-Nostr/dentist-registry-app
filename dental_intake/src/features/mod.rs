@@ -8,6 +8,7 @@ pub mod login;
 
 // Keep for now
 pub mod home;
+pub mod settings;
 
 // Old modules (temporarily disabled to get app compiling)
 // TODO: Refactor or remove these modules

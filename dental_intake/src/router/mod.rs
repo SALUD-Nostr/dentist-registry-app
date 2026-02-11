@@ -24,6 +24,8 @@ pub enum Route {
     ClinicalImpressionNew { encounter_id: String },
     #[at("/history")]
     History,
+    #[at("/settings")]
+    Settings,
     #[not_found]
     #[at("/404")]
     NotFound,
@@ -49,6 +51,7 @@ pub fn app_router() -> Html {
                 <navbar::NavbarButton<AppRoute> to={AppRoute::PatientsList} icon={html!{<crate::components::Users class="size-6 text-secondary" />}} label={"Pacientes"} />
                 <navbar::NavbarButton<AppRoute> to={AppRoute::EncountersSchedule} icon={html!{<crate::components::Calendar class="size-6 text-secondary" />}} label={"Citas"} />
                 <navbar::NavbarButton<AppRoute> to={AppRoute::History} icon={html!{<crate::components::List class="size-6 text-secondary" />}} label={"Historial"} />
+                <navbar::NavbarButton<AppRoute> to={AppRoute::Settings} icon={html!{<crate::components::Settings class="size-6 text-secondary" />}} label={"Ajustes"} />
             </navbar::Navbar>
             <div class="self-stretch relative flex flex-1 overflow-hidden">
                 <AppSwitch />
@@ -155,6 +158,11 @@ fn app_switch() -> Html {
                 <yew::suspense::Suspense fallback={loader.clone()}>
                     <crate::features::encounters::EncountersHistory />
                 </yew::suspense::Suspense>
+            </div>
+
+            // Settings
+            <div class={classes!(base_class.clone(), if route == Some(AppRoute::Settings) { visible_class.clone() } else { invisible_class.clone() })}>
+                <crate::features::settings::SettingsPage />
             </div>
         </>
     }
