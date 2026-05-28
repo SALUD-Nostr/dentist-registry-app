@@ -104,6 +104,20 @@ pub fn patient_form() -> Html {
             let notify_patients_changed = notify_patients_changed.clone();
             let nostr_key = nostr_key.clone();
 
+            // Captured for resetting form state after a successful save, so the
+            // next "Nuevo Paciente" starts blank instead of showing stale data.
+            let given_name_reset = given_name.clone();
+            let family_name_reset = family_name.clone();
+            let birth_date_reset = birth_date.clone();
+            let gender_reset = gender.clone();
+            let phone_reset = phone.clone();
+            let email_reset = email.clone();
+            let street_reset = street.clone();
+            let city_reset = city.clone();
+            let state_reset = state.clone();
+            let postal_code_reset = postal_code.clone();
+            let country_reset = country.clone();
+
             spawn_local(async move {
                 // Build HumanName
                 let human_name = HumanName {
@@ -225,6 +239,21 @@ pub fn patient_form() -> Html {
                         match patient_store.save(&patient, keypair).await {
                             Ok(()) => {
                                 log!("Patient saved successfully");
+                                // Clear the form so a subsequent "Nuevo Paciente"
+                                // does not show the patient we just created.
+                                given_name_reset.set(String::new());
+                                family_name_reset.set(String::new());
+                                birth_date_reset.set(String::new());
+                                gender_reset.set(None);
+                                phone_reset.set(String::new());
+                                email_reset.set(String::new());
+                                street_reset.set(String::new());
+                                city_reset.set(String::new());
+                                state_reset.set(String::new());
+                                postal_code_reset.set(String::new());
+                                country_reset.set(String::new());
+                                errors.set(Vec::new());
+                                is_saving.set(false);
                                 notify_patients_changed.emit(());
                                 navigator.push(&crate::router::Route::PatientsList);
                             }
