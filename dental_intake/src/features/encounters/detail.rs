@@ -415,6 +415,8 @@ fn encounter_detail(props: &EncounterDetailCardProps) -> Html {
     let Some(start) = period.start else {
         return html! {};
     };
+    // Stored as UTC; display in the clinic's local timezone.
+    let start = start.with_timezone(&chrono::Local);
     html! {
         <shady_minions::ui::Card class="!border-0 !shadow-none">
             <div class="flex justify-between items-start mb-4 flex-col md:flex-row gap-2">
@@ -595,6 +597,8 @@ fn clinical_impression_card(props: &ClinicalImpressionProps) -> Html {
     let Some(date) = impression.date else {
         return html! {};
     };
+    // Stored as UTC; display in the clinic's local timezone.
+    let date = date.with_timezone(&chrono::Local);
     // Determine border color based on status
     let status_border_color = match impression.status {
         salud_types::ClinicalImpressionStatus::Completed => "border-l-green-500",

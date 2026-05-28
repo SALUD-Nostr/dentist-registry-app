@@ -18,7 +18,10 @@ serde_json = "1.0"
 serde-wasm-bindgen = "0.6.5"
 
 # Date/Time
-chrono = { version = "0.4", features = ["serde"] }
+# `clock` (+ wasmbind) makes `chrono::Local` read the browser timezone under
+# wasm32; without it `Local` silently falls back to UTC and appointment times
+# render with a ~6h offset for El Salvador.
+chrono = { version = "0.4", features = ["serde", "clock", "wasmbind"] }
 
 # Storage
 idb = "0.6.4"

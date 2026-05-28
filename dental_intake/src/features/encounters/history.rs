@@ -293,6 +293,8 @@ pub fn encounters_history() -> Html {
                                 // Format date
                                 let date_display = encounter.period.as_ref().and_then(|period| period.start)
                                     .map(|start| {
+                                        // Stored as UTC; display in the clinic's local timezone.
+                                        let start = start.with_timezone(&chrono::Local);
                                         let weekday = match start.weekday() {
                                             chrono::Weekday::Mon => "Lun",
                                             chrono::Weekday::Tue => "Mar",
@@ -309,7 +311,7 @@ pub fn encounters_history() -> Html {
 
                                 // Format time
                                 let _time_display = encounter.period.as_ref().and_then(|period| period.start)
-                                    .map(|start| start.format("%H:%M").to_string())
+                                    .map(|start| start.with_timezone(&chrono::Local).format("%H:%M").to_string())
                                     .unwrap_or_else(|| "-".to_string());
 
                                 // Patient name
