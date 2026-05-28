@@ -84,17 +84,30 @@ pub fn encounters_schedule() -> Html {
         let is_loading = is_loading.clone();
 
         use_effect_with(encounter_version, move |_version| {
-            // Only reload if calendar is already initialized
-            if calendar_state.borrow().is_some() {
-                if let Err(e) = load_encounters(
-                    calendar_state.clone(),
-                    Some(encounter_store.clone()),
-                    Some(patient_store.clone()),
-                    is_loading.clone(),
-                ) {
-                    log!("Error loading encounters:", format!("{:?}", e));
+            // Reload when encounters change. If the calendar hasn't been
+            // initialized yet (e.g. the version bumped during the initial
+            // render, before `on_calendar_created` fired), retry a few times
+            // on a short timeout instead of silently dropping the reload —
+            // otherwise a freshly-created appointment only appears after a
+            // manual page refresh.
+            wasm_bindgen_futures::spawn_local(async move {
+                for attempt in 0..10 {
+                    if calendar_state.borrow().is_some() {
+                        if let Err(e) = load_encounters(
+                            calendar_state.clone(),
+                            Some(encounter_store.clone()),
+                            Some(patient_store.clone()),
+                            is_loading.clone(),
+                        ) {
+                            log!("Error loading encounters:", format!("{:?}", e));
+                        }
+                        return;
+                    }
+                    log!("Calendar not ready, retrying reload", attempt);
+                    gloo_timers::future::TimeoutFuture::new(100).await;
                 }
-            }
+                log!("Calendar never became ready; reload skipped");
+            });
             || ()
         });
     }
