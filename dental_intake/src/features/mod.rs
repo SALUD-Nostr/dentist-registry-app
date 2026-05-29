@@ -1,6 +1,7 @@
 // New FHIR-compliant modules
 pub mod clinical_impressions;
 pub mod encounters;
+pub mod intake;
 pub mod patients;
 
 // Authentication

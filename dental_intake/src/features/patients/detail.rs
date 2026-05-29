@@ -120,6 +120,14 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
         })
     };
 
+    let handle_intake = {
+        let navigator = navigator.clone();
+        let id = props.patient_id.clone();
+        Callback::from(move |_: MouseEvent| {
+            navigator.push(&crate::router::Route::PatientIntake { id: id.clone() });
+        })
+    };
+
     html! {
         <div class="flex flex-col size-full detail-page overflow-auto">
             <div class="max-w-4xl mx-auto w-full">
@@ -140,13 +148,22 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                                 </Title>
                                 <MutedText class="text-xs">{"ID: "}{&props.patient_id}</MutedText>
                             </div>
-                            <Button
-                                variant={ButtonVariant::Outline}
-                                size={ButtonSize::Small}
-                                onclick={Some(handle_edit.clone())}
-                            >
-                                {"Editar"}
-                            </Button>
+                            <div class="flex items-center gap-2">
+                                <Button
+                                    variant={ButtonVariant::Outline}
+                                    size={ButtonSize::Small}
+                                    onclick={Some(handle_intake.clone())}
+                                >
+                                    {"Ficha Médica"}
+                                </Button>
+                                <Button
+                                    variant={ButtonVariant::Outline}
+                                    size={ButtonSize::Small}
+                                    onclick={Some(handle_edit.clone())}
+                                >
+                                    {"Editar"}
+                                </Button>
+                            </div>
                         </div>
                     } else {
                         <Title>{"Detalles del Paciente"}</Title>

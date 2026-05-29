@@ -104,6 +104,23 @@ impl PatientStore {
                     gloo_console::error!("Error creating index:", format!("{:?}", e));
                 }
             }
+
+            // Intake-related stores (DB version 2). Each keeps a unique by_id
+            // index, matching the other stores.
+            for store_name in [stores::ALLERGIES, stores::CONDITIONS, stores::PROCEDURES] {
+                if !database.store_names().iter().any(|name| name == store_name)
+                    && let Ok(store) = database
+                        .create_object_store(store_name, idb::ObjectStoreParams::new())
+                {
+                    let mut id_params = idb::IndexParams::new();
+                    id_params.unique(true);
+                    if let Err(e) =
+                        store.create_index("by_id", idb::KeyPath::new_single("id"), Some(id_params))
+                    {
+                        gloo_console::error!("Error creating index:", format!("{:?}", e));
+                    }
+                }
+            }
         });
 
         let db = open_request.await?;

@@ -14,6 +14,8 @@ pub enum Route {
     PatientNew,
     #[at("/patients/:id/edit")]
     PatientEdit { id: String },
+    #[at("/patients/:id/intake")]
+    PatientIntake { id: String },
     #[at("/patients/:id")]
     PatientDetail { id: String },
     #[at("/encounters")]
@@ -108,6 +110,19 @@ fn app_switch() -> Html {
                 {
                     if let Some(AppRoute::PatientEdit { ref id }) = route {
                         html! { <crate::features::patients::PatientForm patient_id={id.clone()} /> }
+                    } else {
+                        html! {}
+                    }
+                }
+                </yew::suspense::Suspense>
+            </div>
+
+            // Patient Medical Intake
+            <div class={classes!(base_class.clone(), if matches!(route, Some(AppRoute::PatientIntake{..})) { visible_class.clone() } else { invisible_class.clone() })}>
+                <yew::suspense::Suspense fallback={loader.clone()}>
+                {
+                    if let Some(AppRoute::PatientIntake { ref id }) = route {
+                        html! { <crate::features::intake::MedicalIntakeForm patient_id={id.clone()} /> }
                     } else {
                         html! {}
                     }

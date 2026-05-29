@@ -7,16 +7,24 @@
 //!
 //! All types include serde serialization support and builder patterns.
 
+pub mod allergy_intolerance;
 pub mod clinical_impression;
+pub mod condition;
 pub mod datatypes;
 pub mod encounter;
 pub mod patient;
+pub mod procedure;
 
 // Re-export main types for convenience
+pub use allergy_intolerance::{
+    AllergyCategory, AllergyCriticality, AllergyIntolerance, AllergyIntoleranceBuilder,
+};
 pub use clinical_impression::{
     ClinicalImpression, ClinicalImpressionBuilder, ClinicalImpressionFinding,
     ClinicalImpressionStatus,
 };
+pub use condition::{Condition, ConditionBuilder};
+pub use procedure::{Procedure, ProcedureBuilder, ProcedureStatus};
 pub use encounter::{
     Encounter, EncounterBuilder, EncounterClass, EncounterParticipant, EncounterStatus,
 };
