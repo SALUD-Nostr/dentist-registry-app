@@ -10,6 +10,7 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::components::typography::{Label, MutedText, NormalText, Subtitle, Title};
+use crate::components::{Button, ButtonSize, ButtonVariant};
 
 #[derive(Properties, PartialEq, Eq)]
 pub struct PatientDetailProps {
@@ -111,6 +112,14 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
         })
     };
 
+    let handle_edit = {
+        let navigator = navigator.clone();
+        let id = props.patient_id.clone();
+        Callback::from(move |_: MouseEvent| {
+            navigator.push(&crate::router::Route::PatientEdit { id: id.clone() });
+        })
+    };
+
     html! {
         <div class="flex flex-col size-full detail-page overflow-auto">
             <div class="max-w-4xl mx-auto w-full">
@@ -124,10 +133,21 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                     </button>
 
                     if let Some(p) = (*patient).as_ref() {
-                        <Title>
-                            {p.full_name().unwrap_or_else(|| "Sin nombre".to_string())}
-                        </Title>
-                        <MutedText class="text-xs">{"ID: "}{&props.patient_id}</MutedText>
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <Title>
+                                    {p.full_name().unwrap_or_else(|| "Sin nombre".to_string())}
+                                </Title>
+                                <MutedText class="text-xs">{"ID: "}{&props.patient_id}</MutedText>
+                            </div>
+                            <Button
+                                variant={ButtonVariant::Outline}
+                                size={ButtonSize::Small}
+                                onclick={Some(handle_edit.clone())}
+                            >
+                                {"Editar"}
+                            </Button>
+                        </div>
                     } else {
                         <Title>{"Detalles del Paciente"}</Title>
                         <MutedText class="text-xs">{"ID: "}{&props.patient_id}</MutedText>

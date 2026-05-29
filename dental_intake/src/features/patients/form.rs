@@ -14,12 +14,22 @@ use yew_router::prelude::*;
 use crate::components::typography::{Label, Subtitle, Title};
 use crate::components::{Button, ButtonSize, ButtonVariant};
 
+#[derive(Properties, PartialEq, Eq)]
+pub struct PatientFormProps {
+    /// When set, the form edits the existing patient with this id instead of
+    /// creating a new one.
+    #[prop_or_default]
+    pub patient_id: Option<String>,
+}
+
 #[function_component(PatientForm)]
-pub fn patient_form() -> Html {
+pub fn patient_form(props: &PatientFormProps) -> Html {
     let navigator = use_navigator().unwrap();
     let patient_store = crate::storage::use_patient_store();
     let notify_patients_changed = crate::storage::use_notify_patients_changed();
     let nostr_key = nostr_minions::use_nostr_key();
+
+    let is_edit = props.patient_id.is_some();
 
     // Form state
     let given_name = use_state(String::new);
@@ -37,6 +47,77 @@ pub fn patient_form() -> Html {
     // Validation and UI state
     let errors = use_state(Vec::<String>::new);
     let is_saving = use_state(|| false);
+
+    // When editing, load the existing patient and pre-fill the fields.
+    {
+        let given_name = given_name.clone();
+        let family_name = family_name.clone();
+        let birth_date = birth_date.clone();
+        let gender = gender.clone();
+        let phone = phone.clone();
+        let email = email.clone();
+        let street = street.clone();
+        let city = city.clone();
+        let state = state.clone();
+        let postal_code = postal_code.clone();
+        let country = country.clone();
+        let errors = errors.clone();
+        let patient_store = patient_store.clone();
+
+        use_effect_with(props.patient_id.clone(), move |patient_id| {
+            if let Some(id) = patient_id.clone() {
+                spawn_local(async move {
+                    match patient_store.get(&id).await {
+                        Ok(Some(patient)) => {
+                            if let Some(name) = patient.name.as_ref().and_then(|n| n.first()) {
+                                if let Some(given) = name.given.as_ref().and_then(|g| g.first()) {
+                                    given_name.set(given.clone());
+                                }
+                                if let Some(family) = &name.family {
+                                    family_name.set(family.clone());
+                                }
+                            }
+                            if let Some(bd) = patient.birth_date {
+                                birth_date.set(bd.format("%Y-%m-%d").to_string());
+                            }
+                            gender.set(patient.gender.clone());
+                            if let Some(p) = patient.primary_phone() {
+                                phone.set(p);
+                            }
+                            if let Some(e) = patient.primary_email() {
+                                email.set(e);
+                            }
+                            if let Some(addr) = patient.address.as_ref().and_then(|a| a.first()) {
+                                if let Some(line) = addr.line.as_ref().and_then(|l| l.first()) {
+                                    street.set(line.clone());
+                                }
+                                if let Some(c) = &addr.city {
+                                    city.set(c.clone());
+                                }
+                                if let Some(s) = &addr.state {
+                                    state.set(s.clone());
+                                }
+                                if let Some(pc) = &addr.postal_code {
+                                    postal_code.set(pc.clone());
+                                }
+                                if let Some(co) = &addr.country {
+                                    country.set(co.clone());
+                                }
+                            }
+                        }
+                        Ok(None) => {
+                            errors.set(vec!["Paciente no encontrado".to_string()]);
+                        }
+                        Err(e) => {
+                            log!("Error loading patient for edit:", format!("{:?}", e));
+                            errors.set(vec![format!("Error al cargar paciente: {e:?}")]);
+                        }
+                    }
+                });
+            }
+            || ()
+        });
+    }
 
     let validate_form = {
         let given_name = given_name.clone();
@@ -75,6 +156,9 @@ pub fn patient_form() -> Html {
         let is_saving = is_saving.clone();
         let errors = errors.clone();
         let nostr_key = nostr_key.clone();
+        // Capture the edit target id here so the callback stays 'static
+        // (it must not borrow `props`).
+        let edit_id = props.patient_id.clone();
 
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default();
@@ -103,6 +187,9 @@ pub fn patient_form() -> Html {
             let errors = errors.clone();
             let notify_patients_changed = notify_patients_changed.clone();
             let nostr_key = nostr_key.clone();
+            // When editing, keep the existing id so save() overwrites the
+            // record (IndexedDB put is keyed by id); otherwise mint a new one.
+            let patient_id = edit_id.clone();
 
             // Captured for resetting form state after a successful save, so the
             // next "Nuevo Paciente" starts blank instead of showing stale data.
@@ -196,10 +283,14 @@ pub fn patient_form() -> Html {
                     None
                 };
 
-                // Build Patient using builder
+                // Build Patient using builder. When editing, reuse the
+                // existing id so the store overwrites the record in place.
+                let id = patient_id
+                    .clone()
+                    .unwrap_or_else(|| Uuid::new_v4().to_string());
                 let mut builder = PatientBuilder::default();
                 builder
-                    .id(Uuid::new_v4().to_string())
+                    .id(id)
                     .resource_type("Patient".to_string())
                     .active(true)
                     .name(vec![human_name]);
@@ -255,7 +346,14 @@ pub fn patient_form() -> Html {
                                 errors.set(Vec::new());
                                 is_saving.set(false);
                                 notify_patients_changed.emit(());
-                                navigator.push(&crate::router::Route::PatientsList);
+                                // After editing, return to the patient's detail;
+                                // after creating, go back to the list.
+                                if let Some(id) = patient_id.clone() {
+                                    navigator
+                                        .push(&crate::router::Route::PatientDetail { id });
+                                } else {
+                                    navigator.push(&crate::router::Route::PatientsList);
+                                }
                             }
                             Err(e) => {
                                 log!("Error saving patient:", format!("{:?}", e));
@@ -292,7 +390,7 @@ pub fn patient_form() -> Html {
                         <crate::components::ArrowLeft class="size-5" />
                         {"Volver a Pacientes"}
                     </button>
-                    <Title>{"Registrar Nuevo Paciente"}</Title>
+                    <Title>{if is_edit { "Editar Paciente" } else { "Registrar Nuevo Paciente" }}</Title>
                 </div>
 
                 <form onsubmit={handle_submit}>
@@ -579,7 +677,13 @@ pub fn patient_form() -> Html {
                                     if !*is_saving {
                                         <crate::components::Check class="size-5" />
                                     }
-                                    {if *is_saving { "Guardando..." } else { "Guardar Paciente" }}
+                                    {if *is_saving {
+                                        "Guardando..."
+                                    } else if is_edit {
+                                        "Guardar Cambios"
+                                    } else {
+                                        "Guardar Paciente"
+                                    }}
                                 </Button>
                             </div>
                         </div>
