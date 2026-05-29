@@ -3,7 +3,8 @@
 use chrono::Datelike;
 use gloo_console::log;
 use salud_types::{
-    AdministrativeGender, ContactPointSystem, Encounter, EncounterClass, EncounterStatus, Patient,
+    AdministrativeGender, AllergyIntolerance, Condition, ContactPointSystem, Encounter,
+    EncounterClass, EncounterStatus, Patient, Procedure,
 };
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
@@ -22,9 +23,16 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
     let navigator = use_navigator().unwrap();
     let patient_store = crate::storage::use_patient_store();
     let encounter_store = crate::storage::use_encounter_store();
+    let allergy_store = crate::storage::use_allergy_store();
+    let condition_store = crate::storage::use_condition_store();
+    let procedure_store = crate::storage::use_procedure_store();
 
     let patient = use_state(|| None::<Patient>);
     let encounters = use_state(Vec::<Encounter>::new);
+    let allergies = use_state(Vec::<AllergyIntolerance>::new);
+    let conditions = use_state(Vec::<Condition>::new);
+    let procedures = use_state(Vec::<Procedure>::new);
+    let is_loading_intake = use_state(|| true);
     let sorted_encounters = {
         let mut encs = (*encounters).clone();
         encs.sort_by(|a, b| {
@@ -100,6 +108,35 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                         is_loading_encounters.set(false);
                     }
                 }
+            });
+            || ()
+        });
+    }
+
+    // Load medical intake data (allergies, conditions, procedures) on mount
+    {
+        let patient_id = props.patient_id.clone();
+        let allergies = allergies.clone();
+        let conditions = conditions.clone();
+        let procedures = procedures.clone();
+        let is_loading_intake = is_loading_intake.clone();
+        let allergy_store = allergy_store.clone();
+        let condition_store = condition_store.clone();
+        let procedure_store = procedure_store.clone();
+
+        use_effect_with(patient_id, move |id| {
+            let id = id.clone();
+            spawn_local(async move {
+                if let Ok(a) = allergy_store.get_by_patient(&id).await {
+                    allergies.set(a);
+                }
+                if let Ok(c) = condition_store.get_by_patient(&id).await {
+                    conditions.set(c);
+                }
+                if let Ok(p) = procedure_store.get_by_patient(&id).await {
+                    procedures.set(p);
+                }
+                is_loading_intake.set(false);
             });
             || ()
         });
@@ -362,6 +399,92 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                                 </div>
                             </shady_minions::ui::Card>
                         }
+
+                        // Medical Intake Card (Ficha Médica)
+                        <shady_minions::ui::Card class="border-muted/30 shadow-lg">
+                            <div class="p-6">
+                                <div class="mb-4 flex items-center justify-between gap-2">
+                                    <Subtitle class="flex items-center gap-2">
+                                        <crate::components::Clipboard class="size-6 text-primary" />
+                                        {"Ficha Médica"}
+                                    </Subtitle>
+                                    <Button
+                                        variant={ButtonVariant::Outline}
+                                        size={ButtonSize::Small}
+                                        onclick={Some(handle_intake.clone())}
+                                    >
+                                        {if (*allergies).is_empty() && (*conditions).is_empty() && (*procedures).is_empty() {
+                                            "Crear"
+                                        } else {
+                                            "Editar"
+                                        }}
+                                    </Button>
+                                </div>
+
+                                if *is_loading_intake {
+                                    <div class="flex items-center justify-center py-6">
+                                        <div class="size-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                } else if (*allergies).is_empty() && (*conditions).is_empty() && (*procedures).is_empty() {
+                                    <div class="flex flex-col items-center justify-center gap-2 py-6">
+                                        <MutedText class="text-center">
+                                            {"No hay ficha médica registrada"}
+                                        </MutedText>
+                                        <MutedText class="text-center text-sm">
+                                            {"Haz clic en 'Crear' para registrar alergias, problemas sistémicos y última visita."}
+                                        </MutedText>
+                                    </div>
+                                } else {
+                                    <div class="space-y-4">
+                                        // Allergies
+                                        <div>
+                                            <Label class="block mb-2">{"Alergias"}</Label>
+                                            if (*allergies).is_empty() {
+                                                <MutedText class="text-sm">{"Ninguna registrada"}</MutedText>
+                                            } else {
+                                                <div class="flex flex-wrap gap-2">
+                                                    { for (*allergies).iter().filter_map(|a| a.code.as_ref().map(|c| c.text.clone())).map(|text| html! {
+                                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-sm bg-red-50 text-red-800 border border-red-200">
+                                                            {text}
+                                                        </span>
+                                                    }) }
+                                                </div>
+                                            }
+                                        </div>
+
+                                        // Systemic conditions
+                                        <div>
+                                            <Label class="block mb-2">{"Problemas Sistémicos"}</Label>
+                                            if (*conditions).is_empty() {
+                                                <MutedText class="text-sm">{"Ninguno registrado"}</MutedText>
+                                            } else {
+                                                <div class="flex flex-wrap gap-2">
+                                                    { for (*conditions).iter().filter_map(|c| c.code.as_ref().map(|cc| cc.text.clone())).map(|text| html! {
+                                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-sm bg-amber-50 text-amber-800 border border-amber-200">
+                                                            {text}
+                                                        </span>
+                                                    }) }
+                                                </div>
+                                            }
+                                        </div>
+
+                                        // Last dental visit
+                                        if let Some(proc) = (*procedures).first() {
+                                            <div>
+                                                <Label class="block mb-2">{"Última Visita al Dentista"}</Label>
+                                                <NormalText class="text-sm">
+                                                    {match proc.performed_date_time {
+                                                        Some(dt) => dt.with_timezone(&chrono::Local).format("%d/%m/%Y").to_string(),
+                                                        None => "Fecha no registrada".to_string(),
+                                                    }}
+                                                    {proc.note.as_ref().and_then(|n| n.first()).map(|n| format!(" — {}", n.text)).unwrap_or_default()}
+                                                </NormalText>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </shady_minions::ui::Card>
 
                         // Encounters Card
                         <shady_minions::ui::Card class="!border-0 !shadow-none">
