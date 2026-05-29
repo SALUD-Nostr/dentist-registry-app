@@ -229,9 +229,10 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                         </div>
                     </shady_minions::ui::Card>
                 } else if let Some(p) = (*patient).as_ref() {
-                    <div class="grid gap-4">
-                        // Two column layout for patient info and contact
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    // Two-column layout: demographics on the left, clinical on the right.
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+                        // Left column: personal, contact, address
+                        <div class="flex flex-col gap-4">
                             // Personal Information Card
                             <shady_minions::ui::Card class="border-muted/30 shadow-lg">
                                 <div class="p-6">
@@ -344,7 +345,6 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                                     </div>
                                 </shady_minions::ui::Card>
                             }
-                        </div>
 
                         // Address Information Card
                         if p.address.is_some() && !p.address.as_ref().unwrap().is_empty() {
@@ -398,8 +398,11 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                                     </div>
                                 </div>
                             </shady_minions::ui::Card>
-                        }
+                            }
+                        </div>
 
+                        // Right column: medical intake + encounters
+                        <div class="flex flex-col gap-4">
                         // Medical Intake Card (Ficha Médica)
                         <shady_minions::ui::Card class="border-muted/30 shadow-lg">
                             <div class="p-6">
@@ -515,6 +518,7 @@ pub fn patient_detail(props: &PatientDetailProps) -> Html {
                                     </div>
                                 }
                         </shady_minions::ui::Card>
+                        </div>
                     </div>
                 }
             </div>
